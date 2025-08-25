@@ -3,7 +3,6 @@ import { createMiddleware } from 'hono/factory';
 export const requireRole = (...roles: string[]) => {
   return createMiddleware(async (c, next) => {
     const payload = c.get('jwtPayload') as { userId: number; role: string };
-    console.log(payload);
     if (!roles.includes(payload.role)) {
       return c.json(
         {
