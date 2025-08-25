@@ -1,0 +1,36 @@
+{
+  "name": "lotto-backend",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prepare": "husky",
+    "format": "prettier --write ./**/*.{ts,mts,js,mjs}",
+    "lint": "eslint --fix ."
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@hono/zod-validator": "^0.7.2",
+    "@prisma/client": "6.14.0",
+    "argon2": "^0.44.0",
+    "dotenv": "^17.2.1",
+    "hono": "^4.9.4",
+    "zod": "^4.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@types/node": "^20.11.17",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.3.0",
+    "husky": "^9.1.7",
+    "jiti": "^2.5.1",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.6.2",
+    "prisma": "^6.14.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.40.0"
+  }
+}

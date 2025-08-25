@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum LotteryDrawStatus {
+  open
+  closed
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+model Users {
+  id       Int      @id @default(autoincrement())
+  username String   @unique @db.VarChar(255)
+  password String   @db.VarChar(255)
+  email    String   @unique @db.VarChar(255)
+  phone    String   @unique @db.VarChar(10)
+  money    Decimal  @default(0) @db.Decimal(10, 0)
+  role     UserRole @default(user)
+
+  tickets LotteryTickets[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LotteryDraws {
+  id       Int               @id @default(autoincrement())
+  drawDate DateTime          @db.Date
+  name     String            @db.VarChar(100)
+  status   LotteryDrawStatus @default(open)
+
+  tickets LotteryTickets[]
+
+  prizes Prizes[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LotteryTickets {
+  id           Int    @id @default(autoincrement())
+  ticketNumber String @db.Char(6)
+
+  prize Prizes?
+
+  drawId Int
+  draw   LotteryDraws @relation(fields: [drawId], references: [id])
+
+  ownerId Int?
+  owner   Users? @relation(fields: [ownerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ticketNumber, drawId])
+}
+
+model Prizes {
+  id               Int     @id @default(autoincrement())
+  prizeRank        Int
+  prizeDescription String  @db.VarChar(255)
+  prizeAmount      Decimal @db.Decimal(10, 0)
+
+  drawId Int
+  draw   LotteryDraws @relation(fields: [drawId], references: [id])
+
+  winningTicketId Int            @unique
+  winningTicket   LotteryTickets @relation(fields: [winningTicketId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
