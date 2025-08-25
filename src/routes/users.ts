@@ -1,12 +1,11 @@
 import { Hono } from 'hono';
 import { UserService } from '../services/users.js';
 import { createUserSchema } from '../dto/users/create-user.js';
-import { updateUserSchema } from '../dto/users/update-user.js';
+import { updateUserForAdminSchema, updateUserSchema } from '../dto/users/update-user.js';
 import { zValidator } from '@hono/zod-validator';
 import z from 'zod';
 import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import { requireRole } from '../middlewares/requireRole.js';
-import { isOwnerOrAdmin } from '../middlewares/isOwnerOrAdmin.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
@@ -145,8 +144,7 @@ route.get(
 );
 
 // Get current user
-// TODO: implement with JWT or something to seek own profile
-route.get('/@me', async (c) => {
+route.get('/@me', requireRole('user', 'admin'), async (c) => {
   const userJwtClaim = c.get('jwtPayload') as { userId: number };
 
   const user = await userService.getById(userJwtClaim.userId);
@@ -155,22 +153,63 @@ route.get('/@me', async (c) => {
   });
 });
 
-// TODO: implement with JWT or something to update own profile
 route.put(
   '/@me',
-
+  requireRole('user', 'admin'),
+  zValidator('json', updateUserSchema, (result, c) => {
+    if (!result.success) {
+      return c.json(
+        {
+          error: {
+            status: 400,
+            code: 'BAD_REQUEST',
+            detail: JSON.parse(result.error.message),
+          },
+        },
+        400,
+      );
+    }
+  }),
   async (c) => {
-    return c.json({
-      status: 'ok',
-    });
+    try {
+      const userJwtClaim = c.get('jwtPayload') as { userId: number };
+      const id = userJwtClaim.userId;
+      const body = c.req.valid('json');
+      const existedUser = await userService.getById(id);
+      if (!existedUser) {
+        return c.json({
+          error: {
+            status: 404,
+            code: 'USER_NOT_FOUND',
+            detail: `User id ${id} is not found`,
+          },
+        });
+      }
+
+      const updatedUser = await userService.updateById(id, body);
+
+      return c.json({
+        data: updatedUser,
+      });
+    } catch {
+      return c.json(
+        {
+          error: {
+            status: 500,
+            code: 'INTERNAL_SERVER_ERROR',
+            detail: 'Something went wrong please try again',
+          },
+        },
+        500,
+      );
+    }
   },
 );
 
 // Get user by id
 route.get(
   '/:id',
-  requireRole('user', 'admin'),
-  isOwnerOrAdmin,
+  requireRole('admin'),
   zValidator(
     'param',
     z.object({
@@ -229,8 +268,7 @@ route.get(
 // Update user by id
 route.put(
   '/:id',
-  requireRole('user', 'admin'),
-  isOwnerOrAdmin,
+  requireRole('admin'),
   zValidator(
     'param',
     z.object({
@@ -251,7 +289,7 @@ route.put(
       }
     },
   ),
-  zValidator('json', updateUserSchema, (result, c) => {
+  zValidator('json', updateUserForAdminSchema, (result, c) => {
     if (!result.success) {
       return c.json(
         {
