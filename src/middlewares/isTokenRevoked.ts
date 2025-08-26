@@ -11,7 +11,7 @@ export const isTokenRevoked = createMiddleware(async (c, next) => {
         error: {
           status: 401,
           code: 'UNAUTHORIZED',
-          detail: 'Invalid token or revoked',
+          detail: 'Invalid token',
         },
       },
       401,

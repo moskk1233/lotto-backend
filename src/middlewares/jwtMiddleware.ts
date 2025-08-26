@@ -10,7 +10,7 @@ export const jwtMiddleware = createMiddleware(async (c, next) => {
           error: {
             status: 401,
             code: 'UNAUTHORIZED',
-            detail: 'Invalid or expired token',
+            detail: 'Invalid token',
           },
         },
         401,
@@ -30,7 +30,7 @@ export const jwtMiddleware = createMiddleware(async (c, next) => {
         error: {
           status: 401,
           code: 'UNAUTHORIZED',
-          detail: 'Invalid or expired token',
+          detail: 'Invalid token',
         },
       },
       401,
