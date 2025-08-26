@@ -7,6 +7,7 @@ import z from 'zod';
 import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import { requireRole } from '../middlewares/requireRole.js';
 import type { Prisma } from '../generated/prisma/index.js';
+import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
@@ -96,6 +97,7 @@ route.post(
 
 // Use middleware to below route
 route.use(jwtMiddleware);
+route.use(isTokenRevoked);
 
 // Get all user
 route.get(
