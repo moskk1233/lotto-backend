@@ -8,6 +8,7 @@ import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import { requireRole } from '../middlewares/requireRole.js';
 import type { Prisma } from '../generated/prisma/index.js';
 import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
+import { internalError } from '../error/internal-error.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
@@ -81,16 +82,7 @@ route.post(
         201,
       );
     } catch {
-      return c.json(
-        {
-          error: {
-            status: 500,
-            code: 'INTERNAL_SERVER_ERROR',
-            detail: 'Something went wrong please try again',
-          },
-        },
-        500,
-      );
+      return internalError(c);
     }
   },
 );
@@ -148,16 +140,7 @@ route.get(
         },
       });
     } catch {
-      return c.json(
-        {
-          error: {
-            status: 500,
-            code: 'INTERNAL_SERVER_ERROR',
-            detail: 'Something went wrong please try again',
-          },
-        },
-        500,
-      );
+      return internalError(c);
     }
   },
 );
@@ -211,16 +194,7 @@ route.put(
         data: updatedUser,
       });
     } catch {
-      return c.json(
-        {
-          error: {
-            status: 500,
-            code: 'INTERNAL_SERVER_ERROR',
-            detail: 'Something went wrong please try again',
-          },
-        },
-        500,
-      );
+      return internalError(c);
     }
   },
 );
@@ -270,16 +244,7 @@ route.get(
         data: user,
       });
     } catch {
-      return c.json(
-        {
-          error: {
-            status: 500,
-            code: 'INTERNAL_SERVER_ERROR',
-            detail: 'Something went wrong please try again',
-          },
-        },
-        500,
-      );
+      return internalError(c);
     }
   },
 );
@@ -344,16 +309,7 @@ route.put(
         data: updatedUser,
       });
     } catch {
-      return c.json(
-        {
-          error: {
-            status: 500,
-            code: 'INTERNAL_SERVER_ERROR',
-            detail: 'Something went wrong please try again',
-          },
-        },
-        500,
-      );
+      return internalError(c);
     }
   },
 );
@@ -403,16 +359,7 @@ route.delete(
       await userService.deleteById(id);
       return c.body(null, 204);
     } catch {
-      return c.json(
-        {
-          error: {
-            status: 500,
-            code: 'INTERNAL_SERVER_ERROR',
-            detail: 'Something went wrong please try again',
-          },
-        },
-        500,
-      );
+      return internalError(c);
     }
   },
 );

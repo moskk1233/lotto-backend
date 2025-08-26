@@ -8,6 +8,7 @@ import { Duration } from '../utils.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import redis from '../redis.js';
 import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
+import { internalError } from '../error/internal-error.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
@@ -73,16 +74,7 @@ route.post(
         access_token: jwtToken,
       });
     } catch {
-      return c.json(
-        {
-          error: {
-            status: 500,
-            code: 'INTERNAL_SERVER_ERROR',
-            detail: 'Something went wrong please try again',
-          },
-        },
-        500,
-      );
+      return internalError(c);
     }
   },
 );
@@ -98,16 +90,7 @@ route.delete('/token', jwtMiddleware, isTokenRevoked, async (c) => {
     if (result !== 'OK') throw new Error();
     return c.body(null, 204);
   } catch {
-    return c.json(
-      {
-        error: {
-          status: 500,
-          code: 'INTERNAL_SERVER_ERROR',
-          detail: 'Something went wrong please try again',
-        },
-      },
-      500,
-    );
+    return internalError(c);
   }
 });
 
