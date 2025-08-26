@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import userRoute from './routes/users.js';
 import authRoute from './routes/auth.js';
+import redis from './redis.js';
 
 const app = new Hono();
 
@@ -28,7 +29,9 @@ serve(
     fetch: app.fetch,
     port: 3000,
   },
-  (info) => {
+  async (info) => {
+    await redis.connect();
+    console.log('Redis connected');
     console.log(`Server is running on http://localhost:${info.port}`);
   },
 );
