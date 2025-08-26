@@ -6,6 +6,7 @@ import { zValidator } from '@hono/zod-validator';
 import z from 'zod';
 import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import { requireRole } from '../middlewares/requireRole.js';
+import type { Prisma } from '../generated/prisma/index.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
@@ -111,16 +112,32 @@ route.get(
         .number()
         .default(20)
         .transform((val) => Math.max(val, 1)),
+      status: z.enum(['pending', 'approved']).optional(),
     }),
+    (result, c) => {
+      if (!result.success) {
+        return c.json({
+          error: {
+            status: 400,
+            code: 'BAD_REQUEST',
+            detail: 'Sorry but your request is illegal',
+          },
+        });
+      }
+    },
   ),
   async (c) => {
     try {
-      const { page, limit } = c.req.valid('query');
+      const { page, limit, status } = c.req.valid('query');
       const offset = (page - 1) * limit;
       const userCount = await userService.count();
       const pageCount = Math.ceil(userCount / limit);
 
-      const users = await userService.getAll(limit, offset);
+      const where: Prisma.UsersWhereInput = {};
+
+      if (status) where.status = status;
+
+      const users = await userService.getAll(limit, offset, where);
       return c.json({
         data: users,
         meta: {

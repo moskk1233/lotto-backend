@@ -2,6 +2,7 @@ import prisma from '../db.js';
 import type { CreateUserDto } from '../dto/users/create-user.js';
 import argon2 from 'argon2';
 import type { UpdateUserDto } from '../dto/users/update-user.js';
+import type { Prisma } from '../generated/prisma/index.js';
 
 export class UserService {
   private static instance: UserService;
@@ -20,9 +21,10 @@ export class UserService {
     return userCount;
   }
 
-  async getAll(limit: number, skip: number) {
+  async getAll(limit: number, skip: number, where: Prisma.UsersWhereInput = {}) {
     const users = await prisma.users.findMany({
       skip,
+      where,
       take: limit,
       omit: {
         password: true,
