@@ -18,14 +18,20 @@ enum UserRole {
   admin
 }
 
+enum UserStatus {
+  pending
+  approved
+}
+
 model Users {
-  id       Int      @id @default(autoincrement())
-  username String   @unique @db.VarChar(255)
-  password String   @db.VarChar(255)
-  email    String   @unique @db.VarChar(255)
-  phone    String   @unique @db.VarChar(10)
-  money    Decimal  @default(0) @db.Decimal(10, 0)
-  role     UserRole @default(user)
+  id       Int        @id @default(autoincrement())
+  username String     @unique @db.VarChar(255)
+  password String     @db.VarChar(255)
+  email    String     @unique @db.VarChar(255)
+  phone    String     @unique @db.VarChar(10)
+  money    Decimal    @default(0) @db.Decimal(10, 0)
+  role     UserRole   @default(user)
+  status   UserStatus @default(pending)
 
   tickets LotteryTickets[]
 

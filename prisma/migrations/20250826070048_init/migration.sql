@@ -7,6 +7,7 @@ CREATE TABLE `Users` (
     `phone` VARCHAR(10) NOT NULL,
     `money` DECIMAL(10, 0) NOT NULL DEFAULT 0,
     `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    `status` ENUM('pending', 'approved') NOT NULL DEFAULT 'pending',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
