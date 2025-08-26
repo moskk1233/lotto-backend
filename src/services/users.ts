@@ -15,8 +15,10 @@ export class UserService {
     return UserService.instance;
   }
 
-  async count() {
-    const userCount = await prisma.users.count();
+  async count(where: Prisma.UsersWhereInput) {
+    const userCount = await prisma.users.count({
+      where,
+    });
 
     return userCount;
   }

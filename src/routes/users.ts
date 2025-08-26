@@ -131,13 +131,13 @@ route.get(
   async (c) => {
     try {
       const { page, limit, status } = c.req.valid('query');
-      const offset = (page - 1) * limit;
-      const userCount = await userService.count();
-      const pageCount = Math.ceil(userCount / limit);
 
       const where: Prisma.UsersWhereInput = {};
-
       if (status) where.status = status;
+
+      const offset = (page - 1) * limit;
+      const userCount = await userService.count(where);
+      const pageCount = Math.ceil(userCount / limit);
 
       const users = await userService.getAll(limit, offset, where);
       return c.json({
