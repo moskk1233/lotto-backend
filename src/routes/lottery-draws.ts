@@ -10,6 +10,9 @@ import type { Prisma } from '../generated/prisma/index.js';
 import { badRequest } from '../error/bad-request.js';
 import { createTicketSchema } from '../dto/lottery-tickets/create-ticket.js';
 import { LotteryTicketService } from '../services/lottery-tickets.js';
+import { updateDrawSchema } from '../dto/lottery-draws/update-draw.js';
+import { notFound } from '../error/not-found.js';
+import { parseId } from '../dto/shared/parseId.js';
 
 const route = new Hono();
 const lotteryDrawService = LotterDrawService.getInstance();
@@ -82,26 +85,20 @@ route.get(
 route.get(
   '/:id',
   requireRole('user', 'admin'),
-  zValidator(
-    'param',
-    z.object({
-      id: z.coerce.number().int(),
-    }),
-    (result, c) => {
-      if (!result.success) {
-        return c.json(
-          {
-            error: {
-              status: 400,
-              code: 'BAD_REQUEST',
-              detail: JSON.parse(result.error.message),
-            },
+  zValidator('param', parseId, (result, c) => {
+    if (!result.success) {
+      return c.json(
+        {
+          error: {
+            status: 400,
+            code: 'BAD_REQUEST',
+            detail: JSON.parse(result.error.message),
           },
-          400,
-        );
-      }
-    },
-  ),
+        },
+        400,
+      );
+    }
+  }),
   async (c) => {
     try {
       const { id } = c.req.valid('param');
@@ -155,15 +152,9 @@ route.post(
 route.get(
   '/:id/lottery-tickets',
   requireRole('user', 'admin'),
-  zValidator(
-    'param',
-    z.object({
-      id: z.coerce.number().int(),
-    }),
-    (result, c) => {
-      if (!result.success) return badRequest(c, JSON.parse(result.error.message));
-    },
-  ),
+  zValidator('param', parseId, (result, c) => {
+    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+  }),
   zValidator(
     'query',
     z.object({
@@ -194,6 +185,9 @@ route.get(
     try {
       const { page, limit, sort, order } = c.req.valid('query');
       const { id } = c.req.valid('param');
+
+      const existedDraw = await lotteryDrawService.getById(id);
+      if (!existedDraw) return notFound(c, 'Draw is not found');
 
       const offset = (page - 1) * limit;
       const ticketCount = await lotteryTicketService.count({
@@ -238,15 +232,9 @@ route.get(
 route.post(
   '/:id/lottery-tickets',
   requireRole('admin'),
-  zValidator(
-    'param',
-    z.object({
-      id: z.coerce.number().int(),
-    }),
-    (result, c) => {
-      if (!result.success) return badRequest(c, JSON.parse(result.error.message));
-    },
-  ),
+  zValidator('param', parseId, (result, c) => {
+    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+  }),
   zValidator('json', createTicketSchema, (result, c) => {
     if (!result.success) return badRequest(c, JSON.parse(result.error.message));
   }),
@@ -259,10 +247,39 @@ route.post(
         drawId: id,
         ticketNumber: body.ticketNumber,
         ownerId: body.ownerId,
+        price: body.price,
       });
 
       return c.json({
         data: newTicket,
+      });
+    } catch (e) {
+      console.log(e);
+      return internalError(c);
+    }
+  },
+);
+
+route.put(
+  '/:id',
+  requireRole('admin'),
+  zValidator('param', parseId, (result, c) => {
+    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+  }),
+  zValidator('json', updateDrawSchema, (result, c) => {
+    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+  }),
+  async (c) => {
+    try {
+      const { id } = c.req.valid('param');
+      const body = c.req.valid('json');
+
+      const existedDraw = await lotteryDrawService.getById(id);
+      if (!existedDraw) return notFound(c, 'Draw is not found');
+
+      const updatedDraw = await lotteryDrawService.updateById(id, body);
+      return c.json({
+        data: updatedDraw,
       });
     } catch {
       return internalError(c);
@@ -270,9 +287,26 @@ route.post(
   },
 );
 
-route.put('/:id', requireRole('admin'));
-
 // Delete Lottery Draw by ID cascade to tickets
-route.delete('/:id', requireRole('admin'));
+route.delete(
+  '/:id',
+  requireRole('admin'),
+  zValidator('param', parseId, (result, c) => {
+    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+  }),
+  async (c) => {
+    try {
+      const { id } = c.req.valid('param');
+      const existedDraw = await lotteryDrawService.getById(id);
+      if (!existedDraw) return notFound(c, 'Draw is not found');
+
+      await lotteryDrawService.deleteById(id);
+      return c.body(null, 204);
+    } catch (e) {
+      console.log(e);
+      return internalError(c);
+    }
+  },
+);
 
 export default route;

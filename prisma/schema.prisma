@@ -61,10 +61,10 @@ model LotteryTickets {
   prize Prizes?
 
   drawId Int
-  draw   LotteryDraws @relation(fields: [drawId], references: [id])
+  draw   LotteryDraws @relation(fields: [drawId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   ownerId Int?
-  owner   Users? @relation(fields: [ownerId], references: [id])
+  owner   Users? @relation(fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,10 +79,10 @@ model Prizes {
   prizeAmount      Decimal @db.Decimal(10, 0)
 
   drawId Int
-  draw   LotteryDraws @relation(fields: [drawId], references: [id])
+  draw   LotteryDraws @relation(fields: [drawId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   winningTicketId Int            @unique
-  winningTicket   LotteryTickets @relation(fields: [winningTicketId], references: [id])
+  winningTicket   LotteryTickets @relation(fields: [winningTicketId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

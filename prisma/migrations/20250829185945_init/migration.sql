@@ -33,6 +33,7 @@ CREATE TABLE `LotteryDraws` (
 CREATE TABLE `LotteryTickets` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `ticketNumber` CHAR(6) NOT NULL,
+    `price` INTEGER NOT NULL,
     `drawId` INTEGER NOT NULL,
     `ownerId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -58,13 +59,13 @@ CREATE TABLE `Prizes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `LotteryTickets` ADD CONSTRAINT `LotteryTickets_drawId_fkey` FOREIGN KEY (`drawId`) REFERENCES `LotteryDraws`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `LotteryTickets` ADD CONSTRAINT `LotteryTickets_drawId_fkey` FOREIGN KEY (`drawId`) REFERENCES `LotteryDraws`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `LotteryTickets` ADD CONSTRAINT `LotteryTickets_ownerId_fkey` FOREIGN KEY (`ownerId`) REFERENCES `Users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Prizes` ADD CONSTRAINT `Prizes_drawId_fkey` FOREIGN KEY (`drawId`) REFERENCES `LotteryDraws`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Prizes` ADD CONSTRAINT `Prizes_drawId_fkey` FOREIGN KEY (`drawId`) REFERENCES `LotteryDraws`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Prizes` ADD CONSTRAINT `Prizes_winningTicketId_fkey` FOREIGN KEY (`winningTicketId`) REFERENCES `LotteryTickets`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Prizes` ADD CONSTRAINT `Prizes_winningTicketId_fkey` FOREIGN KEY (`winningTicketId`) REFERENCES `LotteryTickets`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

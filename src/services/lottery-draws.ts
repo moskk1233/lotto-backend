@@ -1,5 +1,6 @@
 import prisma from '../db.js';
 import type { CreateDrawDto } from '../dto/lottery-draws/create-draw.js';
+import type { UpdateDrawDto } from '../dto/lottery-draws/update-draw.js';
 import type { Prisma } from '../generated/prisma/index.js';
 
 export class LotterDrawService {
@@ -46,6 +47,27 @@ export class LotterDrawService {
   async create(draw: CreateDrawDto) {
     const result = await prisma.lotteryDraws.create({
       data: draw,
+    });
+
+    return result;
+  }
+
+  async updateById(id: number, draw: UpdateDrawDto) {
+    const result = await prisma.lotteryDraws.update({
+      where: {
+        id,
+      },
+      data: draw,
+    });
+
+    return result;
+  }
+
+  async deleteById(id: number) {
+    const result = await prisma.lotteryDraws.delete({
+      where: {
+        id,
+      },
     });
 
     return result;
