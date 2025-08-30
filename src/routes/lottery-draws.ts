@@ -243,6 +243,9 @@ route.post(
     const body = c.req.valid('json');
 
     try {
+      const existedDraw = await lotteryDrawService.getById(id);
+      if (!existedDraw) return notFound(c, 'Draw is not found');
+
       const newTicket = await lotteryTicketService.create({
         drawId: id,
         ticketNumber: body.ticketNumber,
