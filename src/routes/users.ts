@@ -166,6 +166,67 @@ route.get('/@me', requireRole('user', 'admin'), async (c) => {
   });
 });
 
+route.get(
+  '/@me/lottery-tickets',
+  requireRole('user', 'admin'),
+  zValidator(
+    'query',
+    z.object({
+      page: z.coerce
+        .number()
+        .default(1)
+        .transform((val) => Math.max(val, 1)),
+      limit: z.coerce
+        .number()
+        .default(20)
+        .transform((val) => Math.max(val, 1)),
+      sort: z.string().optional(),
+      order: z.enum(['asc', 'desc']).optional(),
+    }),
+    (result, c) => {
+      if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+    },
+  ),
+  async (c) => {
+    try {
+      const { limit, page, sort, order } = c.req.valid('query');
+      const userClaim = c.get('jwtPayload') as { userId: number };
+
+      const offset = (page - 1) * limit;
+      const ticketCount = await lotteryTicketService.count({
+        where: {
+          ownerId: userClaim.userId,
+        },
+      });
+      const pageCount = Math.ceil(ticketCount / limit);
+
+      const orderBy = sort ? { [sort]: order } : undefined;
+
+      const tickets = await lotteryTicketService.getAll({
+        where: {
+          ownerId: userClaim.userId,
+        },
+        skip: offset,
+        take: limit,
+        orderBy,
+        omit: {
+          ownerId: true,
+        },
+      });
+
+      return c.json({
+        data: tickets,
+        meta: {
+          page,
+          pageCount,
+        },
+      });
+    } catch {
+      return internalError(c);
+    }
+  },
+);
+
 route.post(
   '/@me/lottery-tickets',
   requireRole('user', 'admin'),
