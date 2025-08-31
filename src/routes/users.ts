@@ -164,6 +164,9 @@ route.get('/@me', requireRole('user', 'admin'), async (c) => {
 // TODO: implement users buying
 route.post('/@me/lottery-tickets');
 
+// TODO: implement user prizing
+route.post('/@me/prizes/:id');
+
 route.put(
   '/@me',
   requireRole('user', 'admin'),
