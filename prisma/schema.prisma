@@ -8,11 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum LotteryDrawStatus {
-  open
-  closed
-}
-
 enum UserRole {
   user
   admin
@@ -21,6 +16,11 @@ enum UserRole {
 enum UserStatus {
   pending
   approved
+}
+
+enum PrizeStatus {
+  unclaim
+  claimed
 }
 
 model Users {
@@ -39,47 +39,26 @@ model Users {
   updatedAt DateTime @updatedAt
 }
 
-model LotteryDraws {
-  id       Int               @id @default(autoincrement())
-  drawDate DateTime          @db.Date
-  name     String            @db.VarChar(100)
-  status   LotteryDrawStatus @default(open)
-
-  tickets LotteryTickets[]
-
-  prizes Prizes[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model LotteryTickets {
   id           Int    @id @default(autoincrement())
-  ticketNumber String @db.Char(6)
+  ticketNumber String @unique @db.Char(6)
   price        Int
 
   prize Prizes?
-
-  drawId Int
-  draw   LotteryDraws @relation(fields: [drawId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   ownerId Int?
   owner   Users? @relation(fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([ticketNumber, drawId])
 }
 
 model Prizes {
-  id               Int     @id @default(autoincrement())
+  id               Int         @id @default(autoincrement())
   prizeRank        Int
-  prizeDescription String  @db.VarChar(255)
-  prizeAmount      Decimal @db.Decimal(10, 0)
-
-  drawId Int
-  draw   LotteryDraws @relation(fields: [drawId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  prizeDescription String      @db.VarChar(255)
+  prizeAmount      Decimal     @db.Decimal(10, 0)
+  status           PrizeStatus @default(unclaim)
 
   winningTicketId Int            @unique
   winningTicket   LotteryTickets @relation(fields: [winningTicketId], references: [id], onDelete: Cascade, onUpdate: Cascade)

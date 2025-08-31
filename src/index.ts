@@ -4,7 +4,7 @@ import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import userRoute from './routes/users.js';
 import authRoute from './routes/auth.js';
-import lotteryDrawRoute from './routes/lottery-draws.js';
+import lotteryTicketRoute from './routes/lottery-tickets.js';
 import redis from './redis.js';
 
 const app = new Hono();
@@ -23,7 +23,7 @@ app.get('/', (c) => {
 });
 
 app.route('/users', userRoute);
-app.route('/lottery-draws', lotteryDrawRoute);
+app.route('/lottery-tickets', lotteryTicketRoute);
 app.route('/auth', authRoute);
 
 serve(
