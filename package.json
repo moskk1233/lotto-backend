@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "postbuild": "prisma generate",
     "start": "node dist/index.js",
     "prepare": "husky",
     "format": "prettier --write ./**/*.{ts,mts,js,mjs}",
