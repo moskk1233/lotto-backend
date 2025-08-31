@@ -9,9 +9,14 @@ import { requireRole } from '../middlewares/requireRole.js';
 import type { Prisma } from '../generated/prisma/index.js';
 import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
 import { internalError } from '../error/internal-error.js';
+import { buyTicketSchema } from '../dto/users/buy-ticket.js';
+import { badRequest } from '../error/bad-request.js';
+import { LotteryTicketService } from '../services/lottery-tickets.js';
+import { notFound } from '../error/not-found.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
+const lotteryTicketService = LotteryTicketService.getInstance();
 
 // Create user
 route.post(
@@ -161,8 +166,43 @@ route.get('/@me', requireRole('user', 'admin'), async (c) => {
   });
 });
 
-// TODO: implement users buying
-route.post('/@me/lottery-tickets');
+route.post(
+  '/@me/lottery-tickets',
+  requireRole('user', 'admin'),
+  zValidator('json', buyTicketSchema, (result, c) => {
+    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+  }),
+  async (c) => {
+    try {
+      const body = c.req.valid('json');
+      const existedTicket = await lotteryTicketService.getByNumber(body.ticketNumber);
+      if (!existedTicket) return notFound(c, 'Ticket is not found');
+
+      const userClaim = c.get('jwtPayload') as { userId: number };
+      const userProfile = await userService.getById(userClaim.userId);
+      if (!userProfile) return badRequest(c, 'User is invalid');
+      if (userProfile.money.toNumber() < existedTicket.price) {
+        return badRequest(c, "You don't have enough money to buy this ticket");
+      }
+
+      if (existedTicket.ownerId) {
+        return badRequest(c, 'This ticket has already been sold');
+      }
+
+      const updatedTicket = await userService.buyTicket(
+        userClaim.userId,
+        existedTicket.id,
+        existedTicket.price,
+      );
+
+      return c.json({
+        data: updatedTicket,
+      });
+    } catch {
+      return internalError(c);
+    }
+  },
+);
 
 // TODO: implement get prizes for user if existed
 route.get('/@me/prizes');

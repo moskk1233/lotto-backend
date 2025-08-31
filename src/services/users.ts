@@ -131,4 +131,29 @@ export class UserService {
 
     return !!user;
   }
+
+  async buyTicket(userId: number, ticketId: number, price: number) {
+    const [, updatedTicket] = await prisma.$transaction([
+      prisma.users.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          money: {
+            decrement: price,
+          },
+        },
+      }),
+      prisma.lotteryTickets.update({
+        where: {
+          id: ticketId,
+        },
+        data: {
+          ownerId: userId,
+        },
+      }),
+    ]);
+
+    return updatedTicket;
+  }
 }
