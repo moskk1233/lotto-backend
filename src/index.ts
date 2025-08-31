@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import userRoute from './routes/users.js';
 import authRoute from './routes/auth.js';
 import lotteryTicketRoute from './routes/lottery-tickets.js';
+import prizeRoute from './routes/prizes.js';
 import redis from './redis.js';
 
 const app = new Hono();
@@ -24,6 +25,7 @@ app.get('/', (c) => {
 
 app.route('/users', userRoute);
 app.route('/lottery-tickets', lotteryTicketRoute);
+app.route('/prizes', prizeRoute);
 app.route('/auth', authRoute);
 
 serve(

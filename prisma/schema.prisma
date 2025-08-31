@@ -55,7 +55,7 @@ model LotteryTickets {
 
 model Prizes {
   id               Int         @id @default(autoincrement())
-  prizeRank        Int
+  prizeRank        Int         @unique
   prizeDescription String      @db.VarChar(255)
   prizeAmount      Decimal     @db.Decimal(10, 0)
   status           PrizeStatus @default(unclaim)
