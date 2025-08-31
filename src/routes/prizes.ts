@@ -19,6 +19,7 @@ route.use(jwtMiddleware);
 route.use(isTokenRevoked);
 route.use(requireRole('admin'));
 
+// Get all Prize
 route.get(
   '/',
   zValidator(
@@ -49,6 +50,27 @@ route.get(
   },
 );
 
+route.get(
+  '/:id',
+  zValidator('param', parseId, (result, c) => {
+    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+  }),
+  async (c) => {
+    try {
+      const { id } = c.req.valid('param');
+      const existedPrize = await prizeService.getById(id);
+      if (!existedPrize) return notFound(c, 'Prize is not found');
+
+      return c.json({
+        data: existedPrize,
+      });
+    } catch {
+      return internalError(c);
+    }
+  },
+);
+
+// Create Prize
 route.post(
   '/',
   zValidator('json', createPrizeSchema, (result, c) => {
@@ -75,6 +97,7 @@ route.post(
   },
 );
 
+// Update by ID
 route.put(
   '/:id',
   zValidator('param', parseId, (result, c) => {
@@ -110,6 +133,7 @@ route.put(
   },
 );
 
+// Delete by ID
 route.delete(
   '/:id',
   zValidator('param', parseId, (result, c) => {
