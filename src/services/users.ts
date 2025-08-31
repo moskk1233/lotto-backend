@@ -156,4 +156,64 @@ export class UserService {
 
     return updatedTicket;
   }
+
+  async claimPrize(userId: number, prizeId: number) {
+    return await prisma.$transaction(async (tx) => {
+      const prize = await tx.prizes.findUnique({
+        where: {
+          id: prizeId,
+        },
+        include: {
+          winningTicket: true,
+        },
+      });
+
+      if (!prize) {
+        throw new Error('PRIZE_NOT_FOUND');
+      }
+
+      if (prize.winningTicket?.ownerId !== userId) {
+        throw new Error('NOT_PRIZE_OWNER');
+      }
+
+      if (prize.status == 'claimed') {
+        throw new Error('PRIZE_ALREADY_CLAIMED');
+      }
+
+      if (!prize.winningTicketId) {
+        throw new Error('WINNING_TICKET_NOT_FOUND');
+      }
+
+      // Update user's money
+      await tx.users.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          money: {
+            increment: prize.prizeAmount,
+          },
+        },
+      });
+
+      // Mark prize as claimed
+      const updatedPrize = await tx.prizes.update({
+        where: {
+          id: prizeId,
+        },
+        data: {
+          status: 'claimed',
+        },
+      });
+
+      // Delete the ticket
+      await tx.lotteryTickets.delete({
+        where: {
+          id: prize.winningTicketId,
+        },
+      });
+
+      return updatedPrize;
+    });
+  }
 }

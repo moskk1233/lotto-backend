@@ -12,6 +12,7 @@ import { internalError } from '../error/internal-error.js';
 import { buyTicketSchema } from '../dto/users/buy-ticket.js';
 import { badRequest } from '../error/bad-request.js';
 import { LotteryTicketService } from '../services/lottery-tickets.js';
+import { PrizeService } from '../services/prizes.js';
 import { notFound } from '../error/not-found.js';
 
 const route = new Hono();
@@ -265,11 +266,113 @@ route.post(
   },
 );
 
-// TODO: implement get prizes for user if existed
-route.get('/@me/prizes');
+// Get prizes for the current user
+route.get(
+  '/@me/prizes',
+  requireRole('user', 'admin'),
+  zValidator(
+    'query',
+    z.object({
+      page: z.coerce
+        .number()
+        .default(1)
+        .transform((val) => Math.max(val, 1)),
+      limit: z.coerce
+        .number()
+        .default(20)
+        .transform((val) => Math.max(val, 1)),
+      sort: z.string().optional(),
+      order: z.enum(['asc', 'desc']).optional(),
+    }),
+    (result, c) => {
+      if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+    },
+  ),
+  async (c) => {
+    try {
+      const { limit, page, sort, order } = c.req.valid('query');
+      const userClaim = c.get('jwtPayload') as { userId: number };
+      const prizeService = PrizeService.getInstance();
 
-// TODO: implement user prizing
-route.post('/@me/prizes/:id/claim');
+      const where: Prisma.PrizesWhereInput = {
+        winningTicket: {
+          ownerId: userClaim.userId,
+        },
+      };
+
+      const offset = (page - 1) * limit;
+      const prizeCount = await prizeService.count({
+        where,
+      });
+      const pageCount = Math.ceil(prizeCount / limit);
+
+      const orderBy = sort ? { [sort]: order } : undefined;
+
+      const prizes = await prizeService.getAll({
+        where,
+        skip: offset,
+        take: limit,
+        orderBy,
+        include: {
+          winningTicket: {
+            select: {
+              ticketNumber: true,
+            },
+          },
+        },
+      });
+
+      return c.json({
+        data: prizes,
+        meta: {
+          page,
+          pageCount,
+        },
+      });
+    } catch {
+      return internalError(c);
+    }
+  },
+);
+
+route.post(
+  '/@me/prizes/:id/claim',
+  requireRole('user', 'admin'),
+  zValidator('param', z.object({ id: z.coerce.number() })),
+  async (c) => {
+    try {
+      const userClaim = c.get('jwtPayload') as { userId: number };
+      const { id } = c.req.valid('param');
+
+      const updatedPrize = await userService.claimPrize(userClaim.userId, id);
+
+      return c.json({ data: updatedPrize });
+    } catch (err) {
+      if (err instanceof Error) {
+        switch (err.message) {
+          case 'PRIZE_NOT_FOUND':
+            return notFound(c, 'Prize not found');
+          case 'NOT_PRIZE_OWNER':
+            return c.json(
+              {
+                error: {
+                  status: 403,
+                  code: 'FORBIDDEN',
+                  detail: 'You are not the owner of this prize',
+                },
+              },
+              403,
+            );
+          case 'PRIZE_ALREADY_CLAIMED':
+            return badRequest(c, 'This prize has already been claimed');
+          case 'WINNING_TICKET_NOT_FOUND':
+            return notFound(c, 'Associated winning ticket not found');
+        }
+      }
+      return internalError(c);
+    }
+  },
+);
 
 route.put(
   '/@me',
