@@ -12,6 +12,7 @@ import { LotteryTicketService } from '../services/lottery-tickets.js';
 import { updateDrawSchema } from '../dto/lottery-draws/update-draw.js';
 import { notFound } from '../error/not-found.js';
 import { parseId } from '../dto/shared/parseId.js';
+import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
 
 const route = new Hono();
 const lotteryDrawService = LotterDrawService.getInstance();
@@ -19,6 +20,7 @@ const lotteryTicketService = LotteryTicketService.getInstance();
 
 // Assign middleware for Lottery Draw Routes
 route.use(jwtMiddleware);
+route.use(isTokenRevoked);
 
 // Get all Lottery Draws
 route.get(
