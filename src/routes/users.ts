@@ -128,10 +128,16 @@ route.get(
       if (status) where.status = status;
 
       const offset = (page - 1) * limit;
-      const userCount = await userService.count(where);
+      const userCount = await userService.count({
+        where,
+      });
       const pageCount = Math.ceil(userCount / limit);
 
-      const users = await userService.getAll(limit, offset, where);
+      const users = await userService.getAll({
+        skip: offset,
+        take: limit,
+        where,
+      });
       return c.json({
         data: users,
         meta: {

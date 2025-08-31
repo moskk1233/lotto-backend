@@ -6,7 +6,6 @@ import { zValidator } from '@hono/zod-validator';
 import { createDrawSchema } from '../dto/lottery-draws/create-draw.js';
 import { internalError } from '../error/internal-error.js';
 import z from 'zod';
-import type { Prisma } from '../generated/prisma/index.js';
 import { badRequest } from '../error/bad-request.js';
 import { createTicketSchema } from '../dto/lottery-tickets/create-ticket.js';
 import { LotteryTicketService } from '../services/lottery-tickets.js';
@@ -36,10 +35,7 @@ route.get(
         .number()
         .default(20)
         .transform((val) => Math.max(val, 1)),
-      sort: z
-        .string()
-        .optional()
-        .transform((val) => (val ? val.split(',') : [])),
+      sort: z.string().optional(),
       order: z.enum(['asc', 'desc']).default('asc'),
     }),
     (result, c) => {
@@ -62,11 +58,12 @@ route.get(
       const drawCount = await lotteryDrawService.count();
       const pageCount = Math.ceil(drawCount / limit);
 
-      const orderBy = sort.map((field) => ({
-        [field]: order,
-      })) as Prisma.LotteryDrawsOrderByWithAggregationInput;
-
-      const lotteryDraws = await lotteryDrawService.getAll(limit, offset, orderBy);
+      const orderBy = sort ? { [sort]: order } : undefined;
+      const lotteryDraws = await lotteryDrawService.getAll({
+        skip: offset,
+        take: limit,
+        orderBy,
+      });
 
       return c.json({
         data: lotteryDraws,
@@ -198,21 +195,11 @@ route.get(
       console.log(ticketCount);
       const pageCount = Math.ceil(ticketCount / limit);
 
+      const orderBy = sort ? { [sort]: order } : undefined;
       const lotteryTickets = await lotteryTicketService.getAll({
-        pagination: {
-          skip: offset,
-          take: limit,
-        },
-        sorting: {
-          order,
-          sort,
-        },
-        where: {
-          drawId: id,
-        },
-        omit: {
-          drawId: true,
-        },
+        skip: offset,
+        take: limit,
+        orderBy,
       });
 
       return c.json({

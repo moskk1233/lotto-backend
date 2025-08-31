@@ -14,23 +14,13 @@ export class LotterDrawService {
     return LotterDrawService.instance;
   }
 
-  async count() {
-    const result = await prisma.lotteryDraws.count();
-
+  async count(options?: Prisma.LotteryDrawsCountArgs) {
+    const result = await prisma.lotteryDraws.count(options);
     return result;
   }
 
-  async getAll(
-    limit: number,
-    offset: number,
-    orderBy: Prisma.LotteryDrawsOrderByWithRelationInput,
-  ) {
-    const result = await prisma.lotteryDraws.findMany({
-      skip: offset,
-      take: limit,
-      orderBy,
-    });
-
+  async getAll(options?: Prisma.LotteryDrawsFindFirstArgs) {
+    const result = await prisma.lotteryDraws.findMany(options);
     return result;
   }
 

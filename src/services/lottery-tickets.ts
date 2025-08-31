@@ -1,14 +1,6 @@
 import prisma from '../db.js';
 import type { CreateTicketDto } from '../dto/lottery-tickets/create-ticket.js';
-import type { LotteryTickets, Prisma } from '../generated/prisma/index.js';
-import type { BasePagination, BaseSorting } from '../types/types.js';
-
-interface TicketQueryOptions {
-  pagination?: BasePagination;
-  sorting?: BaseSorting;
-  omit?: Partial<Record<keyof LotteryTickets, boolean>>;
-  where?: Prisma.LotteryTicketsWhereInput;
-}
+import type { Prisma } from '../generated/prisma/index.js';
 
 export class LotteryTicketService {
   public static instance: LotteryTicketService;
@@ -21,26 +13,14 @@ export class LotteryTicketService {
     return LotteryTicketService.instance;
   }
 
-  async count(options: TicketQueryOptions) {
-    const { pagination, where } = options;
-    const result = await prisma.lotteryTickets.count({
-      skip: pagination?.skip,
-      take: pagination?.take,
-      where,
-    });
+  async count(options?: Prisma.LotteryTicketsCountArgs) {
+    const result = await prisma.lotteryTickets.count(options);
 
     return result;
   }
 
-  async getAll(options: TicketQueryOptions) {
-    const { pagination, omit, sorting, where } = options;
-    const result = await prisma.lotteryTickets.findMany({
-      skip: pagination?.skip,
-      take: pagination?.take,
-      omit,
-      orderBy: sorting?.sort && sorting?.order ? { [sorting.sort]: sorting.order } : undefined,
-      where,
-    });
+  async getAll(options?: Prisma.LotteryTicketsFindManyArgs) {
+    const result = await prisma.lotteryTickets.findMany(options);
 
     return result;
   }

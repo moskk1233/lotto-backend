@@ -15,19 +15,17 @@ export class UserService {
     return UserService.instance;
   }
 
-  async count(where: Prisma.UsersWhereInput) {
+  async count(options?: Prisma.UsersCountArgs) {
     const userCount = await prisma.users.count({
-      where,
+      where: options?.where,
     });
 
     return userCount;
   }
 
-  async getAll(limit: number, skip: number, where: Prisma.UsersWhereInput = {}) {
+  async getAll(options?: Prisma.UsersFindManyArgs) {
     const users = await prisma.users.findMany({
-      skip,
-      where,
-      take: limit,
+      ...options,
       omit: {
         password: true,
       },
