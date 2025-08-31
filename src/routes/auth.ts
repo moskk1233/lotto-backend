@@ -62,6 +62,18 @@ route.post(
         );
       }
 
+      if (existedUser.status !== 'approved')
+        return c.json(
+          {
+            error: {
+              status: 403,
+              code: 'FORBIDDON',
+              detail: 'User is not approved',
+            },
+          },
+          403,
+        );
+
       const jwtToken = await signToken(
         {
           userId: existedUser.id,
