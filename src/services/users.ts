@@ -102,34 +102,37 @@ export class UserService {
     return deletedUser;
   }
 
-  async isUsernameTaken(username: string) {
-    const user = await prisma.users.findUnique({
+  async checkUniqueField({
+    username,
+    email,
+    phone,
+  }: {
+    username?: string;
+    email?: string;
+    phone?: string;
+  }) {
+    const user = await prisma.users.findFirst({
       where: {
-        username,
+        OR: [
+          username ? { username } : undefined,
+          email ? { email } : undefined,
+          phone ? { phone } : undefined,
+        ].filter(Boolean) as Prisma.UsersWhereInput[],
+      },
+      select: {
+        username: true,
+        email: true,
+        phone: true,
       },
     });
 
-    return !!user;
-  }
-
-  async isEmailTaken(email: string) {
-    const user = await prisma.users.findUnique({
-      where: {
-        email,
-      },
-    });
-
-    return !!user;
-  }
-
-  async isPhoneTaken(phone: string) {
-    const user = await prisma.users.findUnique({
-      where: {
-        phone,
-      },
-    });
-
-    return !!user;
+    return user
+      ? {
+          usernameTaken: user.username === username,
+          emailTaken: user.email === email,
+          phoneTaken: user.phone === phone,
+        }
+      : { usernameTaken: false, emailTaken: false, phoneTaken: false };
   }
 
   async buyTicket(userId: number, ticketId: number, price: number) {

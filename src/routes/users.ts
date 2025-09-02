@@ -32,15 +32,17 @@ route.post(
     try {
       const body = c.req.valid('json');
 
-      if (await userService.isUsernameTaken(body.username)) {
+      const { usernameTaken, emailTaken, phoneTaken } = await userService.checkUniqueField(body);
+
+      if (usernameTaken) {
         return badRequestResponse(c, 'Username is existed');
       }
 
-      if (await userService.isEmailTaken(body.email)) {
+      if (emailTaken) {
         return badRequestResponse(c, 'Email is existed');
       }
 
-      if (await userService.isPhoneTaken(body.phone)) {
+      if (phoneTaken) {
         return badRequestResponse(c, 'Phone is existed');
       }
 

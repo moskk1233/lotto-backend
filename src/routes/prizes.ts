@@ -80,10 +80,9 @@ route.post(
     try {
       const body = c.req.valid('json');
 
-      if (await prizeService.isRankTaken(body.prizeRank))
-        return badRequestResponse(c, 'Rank is taken');
-      if (await prizeService.isWinningIdTaken(body.winningTicketId))
-        return badRequestResponse(c, 'Winning ID is taken');
+      const { prizeRankTaken, winningTicketIdTaken } = await prizeService.checkUniqueField(body);
+      if (prizeRankTaken) return badRequestResponse(c, 'Rank is taken');
+      if (winningTicketIdTaken) return badRequestResponse(c, 'Winning ID is taken');
 
       const createdPrize = await prizeService.create(body);
       return c.json(
@@ -115,14 +114,9 @@ route.put(
       const existedPrize = await prizeService.getById(id);
       if (!existedPrize) return notFoundResponse(c, 'Prize is not found');
 
-      const isRankTaken = body.prizeRank
-        ? await prizeService.isRankTaken(body.prizeRank)
-        : undefined;
-      const isWinningIdTaken = body.winningTicketId
-        ? await prizeService.isWinningIdTaken(body.winningTicketId)
-        : undefined;
-      if (isRankTaken) return badRequestResponse(c, 'Rank is taken');
-      if (isWinningIdTaken) return badRequestResponse(c, 'Winning ID is taken');
+      const { prizeRankTaken, winningTicketIdTaken } = await prizeService.checkUniqueField(body);
+      if (prizeRankTaken) return badRequestResponse(c, 'Rank is taken');
+      if (winningTicketIdTaken) return badRequestResponse(c, 'Winning ID is taken');
 
       const updatedPrize = await prizeService.update(id, body);
       return c.json({
