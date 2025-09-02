@@ -5,13 +5,12 @@ import { requireRole } from '../middlewares/requireRole.js';
 import { LotteryTicketService } from '../services/lottery-tickets.js';
 import z from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { badRequest } from '../error/bad-request.js';
-import { internalError } from '../error/internal-error.js';
+import { badRequestResponse } from '../response/bad-request.js';
+import { internalErrorResponse } from '../response/internal-error.js';
 import { createTicketSchema } from '../dto/lottery-tickets/create-ticket.js';
 import { parseId } from '../dto/shared/parseId.js';
-import { notFound } from '../error/not-found.js';
+import { notFoundResponse } from '../response/not-found.js';
 import { updateTicketSchema } from '../dto/lottery-tickets/update-ticket.js';
-import type { Prisma } from '@prisma/client';
 
 const route = new Hono();
 const lotteryTicketService = LotteryTicketService.getInstance();
@@ -39,7 +38,7 @@ route.get(
       q: z.string().max(6).optional(),
     }),
     (result, c) => {
-      if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+      if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
     },
   ),
   async (c) => {
@@ -68,7 +67,7 @@ route.get(
         },
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -78,13 +77,13 @@ route.post(
   '/',
   requireRole('admin'),
   zValidator('json', createTicketSchema, (result, c) => {
-    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+    if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
   }),
   async (c) => {
     try {
       const body = c.req.valid('json');
       const existedTicket = await lotteryTicketService.getByNumber(body.ticketNumber);
-      if (existedTicket) return badRequest(c, 'Existed ticket number');
+      if (existedTicket) return badRequestResponse(c, 'Existed ticket number');
 
       const createdTicket = await lotteryTicketService.create(body);
       return c.json(
@@ -94,7 +93,7 @@ route.post(
         201,
       );
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -104,20 +103,20 @@ route.get(
   '/:id',
   requireRole('user', 'admin'),
   zValidator('param', parseId, (result, c) => {
-    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+    if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
   }),
   async (c) => {
     try {
       const { id } = c.req.valid('param');
 
       const existedTicket = await lotteryTicketService.getById(id);
-      if (!existedTicket) return notFound(c, 'Ticket is not found');
+      if (!existedTicket) return notFoundResponse(c, 'Ticket is not found');
 
       return c.json({
         data: existedTicket,
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -127,10 +126,10 @@ route.put(
   '/:id',
   requireRole('admin'),
   zValidator('param', parseId, (result, c) => {
-    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+    if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
   }),
   zValidator('json', updateTicketSchema, (result, c) => {
-    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+    if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
   }),
   async (c) => {
     try {
@@ -138,7 +137,7 @@ route.put(
       const body = c.req.valid('json');
 
       const existedTicket = await lotteryTicketService.getById(id);
-      if (!existedTicket) return notFound(c, 'Ticket is not found');
+      if (!existedTicket) return notFoundResponse(c, 'Ticket is not found');
 
       const updatedTicket = await lotteryTicketService.update(id, body);
       return c.json({
@@ -146,7 +145,7 @@ route.put(
       });
     } catch (e) {
       console.log(e);
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -156,18 +155,18 @@ route.delete(
   '/:id',
   requireRole('admin'),
   zValidator('param', parseId, (result, c) => {
-    if (!result.success) return badRequest(c, result.error.message);
+    if (!result.success) return badRequestResponse(c, result.error.message);
   }),
   async (c) => {
     try {
       const { id } = c.req.valid('param');
       const existedTicket = await lotteryTicketService.getById(id);
-      if (!existedTicket) return notFound(c, 'Ticket is not found');
+      if (!existedTicket) return notFoundResponse(c, 'Ticket is not found');
 
       await lotteryTicketService.delete(id);
       return c.body(null, 204);
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
