@@ -11,6 +11,7 @@ import { createTicketSchema } from '../dto/lottery-tickets/create-ticket.js';
 import { parseId } from '../dto/shared/parseId.js';
 import { notFound } from '../error/not-found.js';
 import { updateTicketSchema } from '../dto/lottery-tickets/update-ticket.js';
+import type { Prisma } from '@prisma/client';
 
 const route = new Hono();
 const lotteryTicketService = LotteryTicketService.getInstance();
@@ -35,6 +36,7 @@ route.get(
         .transform((val) => Math.max(val, 1)),
       sort: z.string().optional(),
       order: z.enum(['asc', 'desc']).optional(),
+      q: z.string().max(6).optional(),
     }),
     (result, c) => {
       if (!result.success) return badRequest(c, JSON.parse(result.error.message));
@@ -42,10 +44,12 @@ route.get(
   ),
   async (c) => {
     try {
-      const { limit, page, order, sort } = c.req.valid('query');
+      const { limit, page, order, sort, q } = c.req.valid('query');
       const offset = (page - 1) * limit;
 
-      const ticketCount = await lotteryTicketService.count();
+      const where = q ? { ticketNumber: { contains: q } } : undefined;
+
+      const ticketCount = await lotteryTicketService.count({ where });
       const pageCount = Math.ceil(ticketCount / limit);
 
       const orderBy = sort ? { [sort]: order } : undefined;
@@ -53,6 +57,7 @@ route.get(
         skip: offset,
         take: limit,
         orderBy,
+        where,
       });
 
       return c.json({
