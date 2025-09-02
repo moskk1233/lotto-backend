@@ -8,7 +8,10 @@ import { Duration } from '../utils.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import redis from '../redis.js';
 import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
-import { internalError } from '../error/internal-error.js';
+import { internalErrorResponse } from '../response/internal-error.js';
+import { forbiddonResponse } from '../response/forbiddon.js';
+import { badRequestResponse } from '../response/bad-request.js';
+import { unauthorizedResponse } from '../response/unauthorized.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
@@ -16,18 +19,7 @@ const userService = UserService.getInstance();
 route.post(
   '/token',
   zValidator('json', loginSchema, (result, c) => {
-    if (!result.success) {
-      return c.json(
-        {
-          error: {
-            status: 400,
-            code: 'BAD_REQUEST',
-            detail: JSON.parse(result.error.message),
-          },
-        },
-        400,
-      );
-    }
+    if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
   }),
   async (c) => {
     try {
@@ -35,44 +27,12 @@ route.post(
 
       const existedUser = await userService.getByUsername(username);
 
-      if (!existedUser) {
-        return c.json(
-          {
-            error: {
-              status: 401,
-              code: 'UNAUTHORIZED',
-              detail: 'username or password is invalid',
-            },
-          },
-          401,
-        );
-      }
+      if (!existedUser) return unauthorizedResponse(c, 'username or password is invalid');
 
       const isVerified = await argon2.verify(existedUser.password, password);
-      if (!isVerified) {
-        return c.json(
-          {
-            error: {
-              status: 401,
-              code: 'UNAUTHORIZED',
-              detail: 'username or password is invalid',
-            },
-          },
-          401,
-        );
-      }
+      if (!isVerified) return unauthorizedResponse(c, 'username or password is invalid');
 
-      if (existedUser.status !== 'approved')
-        return c.json(
-          {
-            error: {
-              status: 403,
-              code: 'FORBIDDON',
-              detail: 'User is not approved',
-            },
-          },
-          403,
-        );
+      if (existedUser.status !== 'approved') return forbiddonResponse(c, 'User is not approved');
 
       const jwtToken = await signToken(
         {
@@ -86,7 +46,7 @@ route.post(
         access_token: jwtToken,
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -102,7 +62,7 @@ route.delete('/token', jwtMiddleware, isTokenRevoked, async (c) => {
     if (result !== 'OK') throw new Error();
     return c.body(null, 204);
   } catch {
-    return internalError(c);
+    return internalErrorResponse(c);
   }
 });
 

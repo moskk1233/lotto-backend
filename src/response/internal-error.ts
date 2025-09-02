@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
 
-export const internalError = (c: Context) => {
+export const internalErrorResponse = (c: Context) => {
   return c.json(
     {
       error: {

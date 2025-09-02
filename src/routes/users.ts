@@ -8,12 +8,13 @@ import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import { requireRole } from '../middlewares/requireRole.js';
 import type { Prisma } from '../generated/prisma/index.js';
 import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
-import { internalError } from '../error/internal-error.js';
+import { internalErrorResponse } from '../response/internal-error.js';
 import { buyTicketSchema } from '../dto/users/buy-ticket.js';
-import { badRequest } from '../error/bad-request.js';
+import { badRequestResponse } from '../response/bad-request.js';
 import { LotteryTicketService } from '../services/lottery-tickets.js';
 import { PrizeService } from '../services/prizes.js';
-import { notFound } from '../error/not-found.js';
+import { notFoundResponse } from '../response/not-found.js';
+import { forbiddonResponse } from '../response/forbiddon.js';
 
 const route = new Hono();
 const userService = UserService.getInstance();
@@ -24,59 +25,25 @@ route.post(
   '/',
   zValidator('json', createUserSchema, (result, c) => {
     if (!result.success) {
-      return c.json(
-        {
-          error: {
-            status: 400,
-            code: 'BAD_REQUEST',
-            detail: JSON.parse(result.error.message),
-          },
-        },
-        400,
-      );
+      return badRequestResponse(c, JSON.parse(result.error.message));
     }
   }),
   async (c) => {
     try {
       const body = c.req.valid('json');
 
-      if (await userService.isUsernameTaken(body.username)) {
-        return c.json(
-          {
-            error: {
-              status: 400,
-              code: 'BAD_REQUEST',
-              detail: 'Username is existed',
-            },
-          },
-          400,
-        );
+      const { usernameTaken, emailTaken, phoneTaken } = await userService.checkUniqueField(body);
+
+      if (usernameTaken) {
+        return badRequestResponse(c, 'Username is existed');
       }
 
-      if (await userService.isEmailTaken(body.email)) {
-        return c.json(
-          {
-            error: {
-              status: 400,
-              code: 'BAD_REQUEST',
-              detail: 'Email is existed',
-            },
-          },
-          400,
-        );
+      if (emailTaken) {
+        return badRequestResponse(c, 'Email is existed');
       }
 
-      if (await userService.isPhoneTaken(body.phone)) {
-        return c.json(
-          {
-            error: {
-              status: 400,
-              code: 'BAD_REQUEST',
-              detail: 'Phone is existed',
-            },
-          },
-          400,
-        );
+      if (phoneTaken) {
+        return badRequestResponse(c, 'Phone is existed');
       }
 
       const newUser = await userService.create(body);
@@ -88,7 +55,7 @@ route.post(
         201,
       );
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -116,13 +83,7 @@ route.get(
     }),
     (result, c) => {
       if (!result.success) {
-        return c.json({
-          error: {
-            status: 400,
-            code: 'BAD_REQUEST',
-            detail: 'Sorry but your request is illegal',
-          },
-        });
+        return badRequestResponse(c, JSON.parse(result.error.message));
       }
     },
   ),
@@ -152,7 +113,7 @@ route.get(
         },
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -185,7 +146,7 @@ route.get(
       order: z.enum(['asc', 'desc']).optional(),
     }),
     (result, c) => {
-      if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+      if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
     },
   ),
   async (c) => {
@@ -223,7 +184,7 @@ route.get(
         },
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -232,23 +193,23 @@ route.post(
   '/@me/lottery-tickets',
   requireRole('user', 'admin'),
   zValidator('json', buyTicketSchema, (result, c) => {
-    if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+    if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
   }),
   async (c) => {
     try {
       const body = c.req.valid('json');
       const existedTicket = await lotteryTicketService.getByNumber(body.ticketNumber);
-      if (!existedTicket) return notFound(c, 'Ticket is not found');
+      if (!existedTicket) return notFoundResponse(c, 'Ticket is not found');
 
       const userClaim = c.get('jwtPayload') as { userId: number };
       const userProfile = await userService.getById(userClaim.userId);
-      if (!userProfile) return badRequest(c, 'User is invalid');
+      if (!userProfile) return badRequestResponse(c, 'User is invalid');
       if (userProfile.money.toNumber() < existedTicket.price) {
-        return badRequest(c, "You don't have enough money to buy this ticket");
+        return badRequestResponse(c, "You don't have enough money to buy this ticket");
       }
 
       if (existedTicket.ownerId) {
-        return badRequest(c, 'This ticket has already been sold');
+        return badRequestResponse(c, 'This ticket has already been sold');
       }
 
       const updatedTicket = await userService.buyTicket(
@@ -261,7 +222,7 @@ route.post(
         data: updatedTicket,
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -285,7 +246,7 @@ route.get(
       order: z.enum(['asc', 'desc']).optional(),
     }),
     (result, c) => {
-      if (!result.success) return badRequest(c, JSON.parse(result.error.message));
+      if (!result.success) return badRequestResponse(c, JSON.parse(result.error.message));
     },
   ),
   async (c) => {
@@ -330,7 +291,7 @@ route.get(
         },
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -351,25 +312,16 @@ route.post(
       if (err instanceof Error) {
         switch (err.message) {
           case 'PRIZE_NOT_FOUND':
-            return notFound(c, 'Prize not found');
+            return notFoundResponse(c, 'Prize not found');
           case 'NOT_PRIZE_OWNER':
-            return c.json(
-              {
-                error: {
-                  status: 403,
-                  code: 'FORBIDDEN',
-                  detail: 'You are not the owner of this prize',
-                },
-              },
-              403,
-            );
+            return forbiddonResponse(c, 'You are not the owner of this prize');
           case 'PRIZE_ALREADY_CLAIMED':
-            return badRequest(c, 'This prize has already been claimed');
+            return badRequestResponse(c, 'This prize has already been claimed');
           case 'WINNING_TICKET_NOT_FOUND':
-            return notFound(c, 'Associated winning ticket not found');
+            return notFoundResponse(c, 'Associated winning ticket not found');
         }
       }
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -379,16 +331,7 @@ route.put(
   requireRole('user', 'admin'),
   zValidator('json', updateUserSchema, (result, c) => {
     if (!result.success) {
-      return c.json(
-        {
-          error: {
-            status: 400,
-            code: 'BAD_REQUEST',
-            detail: JSON.parse(result.error.message),
-          },
-        },
-        400,
-      );
+      return badRequestResponse(c, JSON.parse(result.error.message));
     }
   }),
   async (c) => {
@@ -398,13 +341,7 @@ route.put(
       const body = c.req.valid('json');
       const existedUser = await userService.getById(id);
       if (!existedUser) {
-        return c.json({
-          error: {
-            status: 404,
-            code: 'USER_NOT_FOUND',
-            detail: `User id ${id} is not found`,
-          },
-        });
+        return notFoundResponse(c, 'User is not found');
       }
 
       const updatedUser = await userService.updateById(id, body);
@@ -413,7 +350,7 @@ route.put(
         data: updatedUser,
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -429,16 +366,7 @@ route.get(
     }),
     (result, c) => {
       if (!result.success) {
-        return c.json(
-          {
-            error: {
-              status: 400,
-              code: 'BAD_REQUEST',
-              detail: 'ID is not number',
-            },
-          },
-          400,
-        );
+        return badRequestResponse(c, JSON.parse(result.error.message));
       }
     },
   ),
@@ -447,23 +375,14 @@ route.get(
       const { id } = c.req.valid('param');
       const user = await userService.getById(id);
       if (!user) {
-        return c.json(
-          {
-            error: {
-              status: 404,
-              code: 'USER_NOT_FOUND',
-              detail: `User id ${id} is not found.`,
-            },
-          },
-          404,
-        );
+        return notFoundResponse(c, 'User is not found');
       }
 
       return c.json({
         data: user,
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -479,31 +398,13 @@ route.put(
     }),
     (result, c) => {
       if (!result.success) {
-        return c.json(
-          {
-            error: {
-              status: 400,
-              code: 'BAD_REQUEST',
-              detail: 'ID is not number',
-            },
-          },
-          400,
-        );
+        return badRequestResponse(c, JSON.parse(result.error.message));
       }
     },
   ),
   zValidator('json', updateUserForAdminSchema, (result, c) => {
     if (!result.success) {
-      return c.json(
-        {
-          error: {
-            status: 400,
-            code: 'BAD_REQUEST',
-            detail: JSON.parse(result.error.message),
-          },
-        },
-        400,
-      );
+      return badRequestResponse(c, JSON.parse(result.error.message));
     }
   }),
   async (c) => {
@@ -513,13 +414,7 @@ route.put(
 
       const existedUser = await userService.getById(id);
       if (!existedUser) {
-        return c.json({
-          error: {
-            status: 404,
-            code: 'USER_NOT_FOUND',
-            detail: `User id ${id} is not found`,
-          },
-        });
+        return notFoundResponse(c, 'User is not found');
       }
 
       const updatedUser = await userService.updateById(id, body);
@@ -528,7 +423,7 @@ route.put(
         data: updatedUser,
       });
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );
@@ -544,16 +439,7 @@ route.delete(
     }),
     (result, c) => {
       if (!result.success) {
-        return c.json(
-          {
-            error: {
-              status: 400,
-              code: 'BAD_REQUEST',
-              detail: 'ID is not number',
-            },
-          },
-          400,
-        );
+        return badRequestResponse(c, 'ID is not number');
       }
     },
   ),
@@ -563,22 +449,13 @@ route.delete(
       const existedUser = await userService.getById(id);
 
       if (!existedUser) {
-        return c.json(
-          {
-            error: {
-              status: 404,
-              code: 'USER_NOT_FOUND',
-              detail: `User id ${id} is not found`,
-            },
-          },
-          404,
-        );
+        return notFoundResponse(c, 'User is not found');
       }
 
       await userService.deleteById(id);
       return c.body(null, 204);
     } catch {
-      return internalError(c);
+      return internalErrorResponse(c);
     }
   },
 );

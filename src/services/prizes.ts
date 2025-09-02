@@ -51,23 +51,30 @@ export class PrizeService {
     });
   }
 
-  async isRankTaken(rank: number) {
-    const result = await prisma.prizes.findUnique({
+  async checkUniqueField({
+    prizeRank,
+    winningTicketId,
+  }: {
+    prizeRank?: number;
+    winningTicketId?: number;
+  }) {
+    const result = await prisma.prizes.findFirst({
       where: {
-        prizeRank: rank,
+        OR: [
+          prizeRank ? { prizeRank } : undefined,
+          winningTicketId ? { winningTicketId } : undefined,
+        ].filter(Boolean) as Prisma.PrizesWhereInput[],
       },
     });
 
-    return !!result;
-  }
-
-  async isWinningIdTaken(ticketId: number) {
-    const result = await prisma.prizes.findUnique({
-      where: {
-        winningTicketId: ticketId,
-      },
-    });
-
-    return !!result;
+    return result
+      ? {
+          prizeRankTaken: result.prizeRank === prizeRank,
+          winningTicketIdTaken: result.winningTicketId === winningTicketId,
+        }
+      : {
+          prizeRankTaken: false,
+          winningTicketIdTaken: false,
+        };
   }
 }
