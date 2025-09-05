@@ -79,7 +79,6 @@ route.get(
         .number()
         .default(20)
         .transform((val) => Math.max(val, 1)),
-      status: z.enum(['pending', 'approved']).optional(),
     }),
     (result, c) => {
       if (!result.success) {
@@ -89,21 +88,15 @@ route.get(
   ),
   async (c) => {
     try {
-      const { page, limit, status } = c.req.valid('query');
-
-      const where: Prisma.UsersWhereInput = {};
-      if (status) where.status = status;
+      const { page, limit } = c.req.valid('query');
 
       const offset = (page - 1) * limit;
-      const userCount = await userService.count({
-        where,
-      });
+      const userCount = await userService.count();
       const pageCount = Math.ceil(userCount / limit);
 
       const users = await userService.getAll({
         skip: offset,
         take: limit,
-        where,
       });
       return c.json({
         data: users,

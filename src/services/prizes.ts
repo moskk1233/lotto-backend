@@ -30,7 +30,7 @@ export class PrizeService {
     });
   }
 
-  async create(prize: CreatePrizeDto) {
+  async create(prize: Omit<CreatePrizeDto & { winningTicketId: number }, 'type' | 'ticketNumber'>) {
     return await prisma.prizes.create({ data: prize });
   }
 
@@ -51,29 +51,20 @@ export class PrizeService {
     });
   }
 
-  async checkUniqueField({
-    prizeRank,
-    winningTicketId,
-  }: {
-    prizeRank?: number;
-    winningTicketId?: number;
-  }) {
+  async checkUniqueField({ winningTicketId }: { winningTicketId?: number }) {
     const result = await prisma.prizes.findFirst({
       where: {
-        OR: [
-          prizeRank ? { prizeRank } : undefined,
-          winningTicketId ? { winningTicketId } : undefined,
-        ].filter(Boolean) as Prisma.PrizesWhereInput[],
+        OR: [winningTicketId ? { winningTicketId } : undefined].filter(
+          Boolean,
+        ) as Prisma.PrizesWhereInput[],
       },
     });
 
     return result
       ? {
-          prizeRankTaken: result.prizeRank === prizeRank,
           winningTicketIdTaken: result.winningTicketId === winningTicketId,
         }
       : {
-          prizeRankTaken: false,
           winningTicketIdTaken: false,
         };
   }
