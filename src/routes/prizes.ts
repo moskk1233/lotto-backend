@@ -11,9 +11,12 @@ import { parseId } from '../dto/shared/parseId.js';
 import { updatePrizeSchema } from '../dto/prizes/update-prize.js';
 import { notFoundResponse } from '../response/not-found.js';
 import z from 'zod';
+import prisma from '../db.js';
+import { LotteryTicketService } from '../services/lottery-tickets.js';
 
 const route = new Hono();
 const prizeService = PrizeService.getInstance();
+const lotteryTicketService = LotteryTicketService.getInstance();
 
 route.use(jwtMiddleware);
 route.use(isTokenRevoked);
@@ -80,17 +83,57 @@ route.post(
     try {
       const body = c.req.valid('json');
 
-      const { prizeRankTaken, winningTicketIdTaken } = await prizeService.checkUniqueField(body);
-      if (prizeRankTaken) return badRequestResponse(c, 'Rank is taken');
-      if (winningTicketIdTaken) return badRequestResponse(c, 'Winning ID is taken');
+      switch (body.type) {
+        case 'RANKED': {
+          const ticketPrize = await lotteryTicketService.getByNumber(body.ticketNumber);
+          if (!ticketPrize) return notFoundResponse(c, 'Ticket is not found');
 
-      const createdPrize = await prizeService.create(body);
-      return c.json(
-        {
-          data: createdPrize,
-        },
-        201,
-      );
+          const existedPrize = await prisma.prizes.findFirst({
+            where: {
+              winningTicketId: ticketPrize.id,
+            },
+          });
+
+          if (existedPrize) return badRequestResponse(c, 'Prize already added');
+
+          const result = await prizeService.create({
+            prizeAmount: body.prizeAmount,
+            prizeDescription: body.prizeDescription,
+            winningTicketId: ticketPrize.id,
+          });
+          return c.json(
+            {
+              data: result,
+            },
+            201,
+          );
+        }
+        case 'LAST': {
+          const ticketPrizes = await lotteryTicketService.getAll({
+            where: {
+              ticketNumber: {
+                endsWith: body.ticketNumber,
+              },
+            },
+          });
+          if (ticketPrizes.length === 0) return notFoundResponse(c, 'No ticket win');
+
+          const result = await prisma.prizes.createMany({
+            data: ticketPrizes.map((ticket) => ({
+              prizeAmount: body.prizeAmount,
+              prizeDescription: body.prizeDescription,
+              winningTicketId: ticket.id,
+            })),
+          });
+
+          return c.json(
+            {
+              data: result,
+            },
+            201,
+          );
+        }
+      }
     } catch {
       return internalErrorResponse(c);
     }
@@ -114,8 +157,7 @@ route.put(
       const existedPrize = await prizeService.getById(id);
       if (!existedPrize) return notFoundResponse(c, 'Prize is not found');
 
-      const { prizeRankTaken, winningTicketIdTaken } = await prizeService.checkUniqueField(body);
-      if (prizeRankTaken) return badRequestResponse(c, 'Rank is taken');
+      const { winningTicketIdTaken } = await prizeService.checkUniqueField(body);
       if (winningTicketIdTaken) return badRequestResponse(c, 'Winning ID is taken');
 
       const updatedPrize = await prizeService.update(id, body);

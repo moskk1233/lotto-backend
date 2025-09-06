@@ -13,25 +13,19 @@ enum UserRole {
   admin
 }
 
-enum UserStatus {
-  pending
-  approved
-}
-
 enum PrizeStatus {
   unclaim
   claimed
 }
 
 model Users {
-  id       Int        @id @default(autoincrement())
-  username String     @unique @db.VarChar(255)
-  password String     @db.VarChar(255)
-  email    String     @unique @db.VarChar(255)
-  phone    String     @unique @db.VarChar(10)
-  money    Decimal    @default(0) @db.Decimal(10, 0)
-  role     UserRole   @default(user)
-  status   UserStatus @default(pending)
+  id       Int      @id @default(autoincrement())
+  username String   @unique @db.VarChar(255)
+  password String   @db.VarChar(255)
+  email    String   @unique @db.VarChar(255)
+  phone    String   @unique @db.VarChar(10)
+  money    Decimal  @default(0) @db.Decimal(10, 0)
+  role     UserRole @default(user)
 
   tickets LotteryTickets[]
 
@@ -44,7 +38,7 @@ model LotteryTickets {
   ticketNumber String @unique @db.Char(6)
   price        Int
 
-  prize Prizes?
+  prize Prizes[]
 
   ownerId Int?
   owner   Users? @relation(fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -55,12 +49,11 @@ model LotteryTickets {
 
 model Prizes {
   id               Int         @id @default(autoincrement())
-  prizeRank        Int         @unique
   prizeDescription String      @db.VarChar(255)
   prizeAmount      Decimal     @db.Decimal(10, 0)
   status           PrizeStatus @default(unclaim)
 
-  winningTicketId Int            @unique
+  winningTicketId Int
   winningTicket   LotteryTickets @relation(fields: [winningTicketId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   createdAt DateTime @default(now())

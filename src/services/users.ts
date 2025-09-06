@@ -209,13 +209,6 @@ export class UserService {
         },
       });
 
-      // Delete the ticket
-      await tx.lotteryTickets.delete({
-        where: {
-          id: prize.winningTicketId,
-        },
-      });
-
       return updatedPrize;
     });
   }

@@ -9,7 +9,6 @@ import { jwtMiddleware } from '../middlewares/jwtMiddleware.js';
 import redis from '../redis.js';
 import { isTokenRevoked } from '../middlewares/isTokenRevoked.js';
 import { internalErrorResponse } from '../response/internal-error.js';
-import { forbiddonResponse } from '../response/forbiddon.js';
 import { badRequestResponse } from '../response/bad-request.js';
 import { unauthorizedResponse } from '../response/unauthorized.js';
 
@@ -31,8 +30,6 @@ route.post(
 
       const isVerified = await argon2.verify(existedUser.password, password);
       if (!isVerified) return unauthorizedResponse(c, 'username or password is invalid');
-
-      if (existedUser.status !== 'approved') return forbiddonResponse(c, 'User is not approved');
 
       const jwtToken = await signToken(
         {

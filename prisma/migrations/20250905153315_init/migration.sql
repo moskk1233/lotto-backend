@@ -7,7 +7,6 @@ CREATE TABLE `Users` (
     `phone` VARCHAR(10) NOT NULL,
     `money` DECIMAL(10, 0) NOT NULL DEFAULT 0,
     `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
-    `status` ENUM('pending', 'approved') NOT NULL DEFAULT 'pending',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -33,7 +32,6 @@ CREATE TABLE `LotteryTickets` (
 -- CreateTable
 CREATE TABLE `Prizes` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `prizeRank` INTEGER NOT NULL,
     `prizeDescription` VARCHAR(255) NOT NULL,
     `prizeAmount` DECIMAL(10, 0) NOT NULL,
     `status` ENUM('unclaim', 'claimed') NOT NULL DEFAULT 'unclaim',
@@ -41,8 +39,6 @@ CREATE TABLE `Prizes` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Prizes_prizeRank_key`(`prizeRank`),
-    UNIQUE INDEX `Prizes_winningTicketId_key`(`winningTicketId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
