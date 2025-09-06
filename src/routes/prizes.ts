@@ -12,9 +12,11 @@ import { updatePrizeSchema } from '../dto/prizes/update-prize.js';
 import { notFoundResponse } from '../response/not-found.js';
 import z from 'zod';
 import prisma from '../db.js';
+import { LotteryTicketService } from '../services/lottery-tickets.js';
 
 const route = new Hono();
 const prizeService = PrizeService.getInstance();
+const lotteryTicketService = LotteryTicketService.getInstance();
 
 route.use(jwtMiddleware);
 route.use(isTokenRevoked);
@@ -83,12 +85,7 @@ route.post(
 
       switch (body.type) {
         case 'RANKED': {
-          const ticketPrize = await prisma.lotteryTickets.findUnique({
-            where: {
-              ticketNumber: body.ticketNumber,
-            },
-          });
-
+          const ticketPrize = await lotteryTicketService.getByNumber(body.ticketNumber);
           if (!ticketPrize) return notFoundResponse(c, 'Ticket is not found');
 
           const existedPrize = await prisma.prizes.findFirst({
@@ -99,14 +96,11 @@ route.post(
 
           if (existedPrize) return badRequestResponse(c, 'Prize already added');
 
-          const result = await prisma.prizes.create({
-            data: {
-              prizeAmount: body.prizeAmount,
-              prizeDescription: body.prizeDescription,
-              winningTicketId: ticketPrize.id,
-            },
+          const result = await prizeService.create({
+            prizeAmount: body.prizeAmount,
+            prizeDescription: body.prizeDescription,
+            winningTicketId: ticketPrize.id,
           });
-
           return c.json(
             {
               data: result,
@@ -115,14 +109,13 @@ route.post(
           );
         }
         case 'LAST': {
-          const ticketPrizes = await prisma.lotteryTickets.findMany({
+          const ticketPrizes = await lotteryTicketService.getAll({
             where: {
               ticketNumber: {
                 endsWith: body.ticketNumber,
               },
             },
           });
-
           if (ticketPrizes.length === 0) return notFoundResponse(c, 'No ticket win');
 
           const result = await prisma.prizes.createMany({
