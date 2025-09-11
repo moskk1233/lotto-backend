@@ -24,6 +24,7 @@ export class AllExceptionFilter<T> implements ExceptionFilter {
     }
 
     const internalError = new InternalServerError(); // หรือส่ง detail เพิ่มได้
+    console.error(exception);
     response
       .status(internalError.getStatus())
       .json(internalError.getResponse());
