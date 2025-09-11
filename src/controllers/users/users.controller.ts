@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/dto/users/create-user.dto';
+import { SearchUserQueryDto } from 'src/dto/users/search-user-query.dto';
 import { BadRequest } from 'src/exceptions/bad-request/bad-request';
 import { UsersService } from 'src/services/users/users.service';
 
@@ -42,29 +43,17 @@ export class UsersController {
   }
 
   @Get()
-  async findAll(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '20',
-  ) {
-    let pageNumber = parseInt(page, 10);
-    let limitNumber = parseInt(limit, 10);
-
-    // ป้องกันเลขต่ำกว่า 1
-    if (isNaN(pageNumber) || pageNumber < 1) {
-      pageNumber = 1;
-    }
-    if (isNaN(limitNumber) || limitNumber < 1) {
-      limitNumber = 10;
-    }
+  async findAll(@Query() query: SearchUserQueryDto) {
+    const { page, limit } = query;
 
     const userCount = await this.userService.count();
-    const pageCount = Math.ceil(userCount / limitNumber);
-    const users = await this.userService.getAll(pageNumber, limitNumber);
+    const pageCount = Math.ceil(userCount / limit);
+    const users = await this.userService.getAll(page, limit);
 
     return {
       data: users,
       meta: {
-        page: pageNumber,
+        page: page,
         pageCount,
       },
     };
