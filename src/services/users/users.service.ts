@@ -18,6 +18,23 @@ export class UsersService {
     });
   }
 
+  async count() {
+    return await this.prisma.users.count();
+  }
+
+  async getAll(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    return await this.prisma.users.findMany({
+      skip,
+      take,
+      omit: {
+        password: true,
+      },
+    });
+  }
+
   async getByUsername(username: string) {
     return await this.prisma.users.findUnique({
       where: {
