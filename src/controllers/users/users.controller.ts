@@ -4,13 +4,16 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/dto/users/create-user.dto';
+import { FindUserByIdDto } from 'src/dto/users/find-user-by-id-dto';
 import { SearchUserQueryDto } from 'src/dto/users/search-user-query.dto';
 import { BadRequest } from 'src/exceptions/bad-request/bad-request';
+import { NotFound } from 'src/exceptions/not-found/not-found';
 import { UsersService } from 'src/services/users/users.service';
 
 @ApiTags('Users')
@@ -56,6 +59,18 @@ export class UsersController {
         page: page,
         pageCount,
       },
+    };
+  }
+
+  @Get(':id')
+  async findById(@Param() param: FindUserByIdDto) {
+    const { id } = param;
+
+    const user = await this.userService.getById(id);
+    if (!user) throw new NotFound('User is not found');
+
+    return {
+      data: user,
     };
   }
 }
