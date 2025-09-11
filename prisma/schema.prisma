@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum PrizeStatus {
+  unclaim
+  claimed
+}
+
+model Users {
+  id       Int      @id @default(autoincrement())
+  username String   @unique @db.VarChar(255)
+  password String   @db.VarChar(255)
+  email    String   @unique @db.VarChar(255)
+  phone    String   @unique @db.VarChar(10)
+  money    Int      @default(0)
+  role     UserRole @default(user)
+
+  tickets LotteryTickets[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LotteryTickets {
+  id           Int    @id @default(autoincrement())
+  ticketNumber String @unique @db.Char(6)
+  price        Int
+
+  prize Prizes[]
+
+  ownerId Int?
+  owner   Users? @relation(fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Prizes {
+  id               Int         @id @default(autoincrement())
+  prizeDescription String      @db.VarChar(255)
+  prizeAmount      Int
+  status           PrizeStatus @default(unclaim)
+
+  winningTicketId Int            @unique
+  winningTicket   LotteryTickets @relation(fields: [winningTicketId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

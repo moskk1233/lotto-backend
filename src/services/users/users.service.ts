@@ -1,0 +1,61 @@
+import { Injectable } from '@nestjs/common';
+import { CreateUserDto } from 'src/dto/users/create-user.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import argon2 from 'argon2';
+
+@Injectable()
+export class UsersService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(user: CreateUserDto) {
+    user.password = await argon2.hash(user.password);
+    return await this.prisma.users.create({
+      data: user,
+      omit: {
+        password: true,
+      },
+    });
+  }
+
+  async getByUsername(username: string) {
+    return await this.prisma.users.findUnique({
+      where: {
+        username,
+      },
+    });
+  }
+
+  async checkUniqueField({
+    username,
+    email,
+    phone,
+  }: {
+    username?: string;
+    email?: string;
+    phone?: string;
+  }) {
+    const user = await this.prisma.users.findFirst({
+      where: {
+        OR: [
+          username ? { username } : undefined,
+          email ? { email } : undefined,
+          phone ? { phone } : undefined,
+        ].filter(Boolean) as Prisma.UsersWhereInput[],
+      },
+      select: {
+        username: true,
+        email: true,
+        phone: true,
+      },
+    });
+
+    return user
+      ? {
+          usernameTaken: user.username === username,
+          emailTaken: user.email === email,
+          phoneTaken: user.phone === phone,
+        }
+      : { usernameTaken: false, emailTaken: false, phoneTaken: false };
+  }
+}
