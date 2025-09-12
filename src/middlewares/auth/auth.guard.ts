@@ -31,8 +31,7 @@ export class AuthGuard implements CanActivate {
       const isRevoked = await this.redisService.exists(
         `revoked_token:${token}`,
       );
-      if (isRevoked)
-        throw new UnauthorizedException('This token has been revoked');
+      if (isRevoked) throw new UnauthorizedException();
 
       request['user'] = payload;
     } catch {
