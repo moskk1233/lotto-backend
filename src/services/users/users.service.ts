@@ -3,6 +3,10 @@ import { CreateUserDto } from 'src/dto/users/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import argon2 from 'argon2';
+import {
+  UpdateUserByAdminDto,
+  UpdateUserDto,
+} from 'src/dto/users/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -47,6 +51,22 @@ export class UsersService {
     return await this.prisma.users.findUnique({
       where: {
         username,
+      },
+    });
+  }
+
+  async update(id: number, userDto: UpdateUserDto | UpdateUserByAdminDto) {
+    if (userDto.password) {
+      userDto.password = await argon2.hash(userDto.password);
+    }
+
+    return await this.prisma.users.update({
+      where: {
+        id,
+      },
+      data: userDto,
+      omit: {
+        password: true,
       },
     });
   }

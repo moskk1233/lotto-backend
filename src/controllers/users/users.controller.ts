@@ -6,12 +6,14 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { IdParamDto } from 'src/dto/common/id-param.dto';
 import { CreateUserDto } from 'src/dto/users/create-user.dto';
-import { ParamUserIdDto } from 'src/dto/users/param-user-id.dto';
 import { SearchUserQueryDto } from 'src/dto/users/search-user-query.dto';
+import { UpdateUserByAdminDto } from 'src/dto/users/update-user.dto';
 import { BadRequest } from 'src/exceptions/bad-request/bad-request';
 import { NotFound } from 'src/exceptions/not-found/not-found';
 import { UsersService } from 'src/services/users/users.service';
@@ -63,7 +65,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findById(@Param() param: ParamUserIdDto) {
+  async findById(@Param() param: IdParamDto) {
     const { id } = param;
 
     const user = await this.userService.getById(id);
@@ -71,6 +73,22 @@ export class UsersController {
 
     return {
       data: user,
+    };
+  }
+
+  @Put(':id')
+  async updateById(
+    @Param() param: IdParamDto,
+    @Body() updateUserDto: UpdateUserByAdminDto,
+  ) {
+    const { id } = param;
+
+    const existedUser = await this.userService.getById(id);
+    if (!existedUser) throw new NotFound('User is not found');
+
+    const updatedUser = await this.userService.update(id, updateUserDto);
+    return {
+      data: updatedUser,
     };
   }
 }
