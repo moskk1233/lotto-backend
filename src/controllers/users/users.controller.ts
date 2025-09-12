@@ -18,11 +18,16 @@ import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { IdParamDto } from 'src/dto/common/id-param.dto';
 import { CreateUserDto } from 'src/dto/users/create-user.dto';
 import { SearchUserQueryDto } from 'src/dto/users/search-user-query.dto';
-import { UpdateUserByAdminDto } from 'src/dto/users/update-user.dto';
+import {
+  UpdateUserByAdminDto,
+  UpdateUserDto,
+} from 'src/dto/users/update-user.dto';
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
 import { AuthGuard } from 'src/middlewares/auth/auth.guard';
 import { UsersService } from 'src/services/users/users.service';
 import { RolesGuard } from 'src/middlewares/roles/roles.guard';
+import { User } from 'src/common/decorators/user-claim/user-claim.decorator';
+import type { UserClaim } from 'src/common/types/user-claim';
 
 @ApiTags('Users')
 @Controller('users')
@@ -69,6 +74,34 @@ export class UsersController {
         page: page,
         pageCount,
       },
+    };
+  }
+
+  @Get('@me')
+  @UseGuards(AuthGuard)
+  async findMe(@User() userClaim: UserClaim) {
+    const { userId } = userClaim;
+    const user = await this.userService.getById(userId);
+    if (!user) throw new NotFoundException('User is not found');
+
+    return {
+      data: user,
+    };
+  }
+
+  @Put('@me')
+  @UseGuards(AuthGuard)
+  async updateMe(
+    @User() userClaim: UserClaim,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const { userId } = userClaim;
+    const existedUser = await this.userService.getById(userId);
+    if (!existedUser) throw new NotFoundException('User is not found');
+
+    const updatedUser = await this.userService.update(userId, updateUserDto);
+    return {
+      data: updatedUser,
     };
   }
 

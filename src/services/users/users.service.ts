@@ -44,6 +44,9 @@ export class UsersService {
       where: {
         id,
       },
+      omit: {
+        password: true,
+      },
     });
   }
 
