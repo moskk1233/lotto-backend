@@ -71,6 +71,14 @@ export class UsersService {
     });
   }
 
+  async delete(id: number) {
+    return await this.prisma.users.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
   async checkUniqueField({
     username,
     email,

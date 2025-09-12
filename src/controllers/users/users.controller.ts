@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -90,5 +91,16 @@ export class UsersController {
     return {
       data: updatedUser,
     };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteById(@Param() param: IdParamDto) {
+    const { id } = param;
+
+    const existedUser = await this.userService.getById(id);
+    if (!existedUser) throw new NotFound('User is not found');
+
+    await this.userService.delete(id);
   }
 }
