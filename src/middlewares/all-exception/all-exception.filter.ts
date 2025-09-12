@@ -3,9 +3,9 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { InternalServerError } from 'src/exceptions/internal-server-error/internal-server-error';
 
 @Catch()
 export class AllExceptionFilter<T> implements ExceptionFilter {
@@ -23,7 +23,7 @@ export class AllExceptionFilter<T> implements ExceptionFilter {
       return;
     }
 
-    const internalError = new InternalServerError(); // หรือส่ง detail เพิ่มได้
+    const internalError = new InternalServerErrorException(); // หรือส่ง detail เพิ่มได้
     console.error(exception);
     response
       .status(internalError.getStatus())

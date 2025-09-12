@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -18,8 +20,6 @@ import { CreateUserDto } from 'src/dto/users/create-user.dto';
 import { SearchUserQueryDto } from 'src/dto/users/search-user-query.dto';
 import { UpdateUserByAdminDto } from 'src/dto/users/update-user.dto';
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
-import { BadRequest } from 'src/exceptions/bad-request/bad-request';
-import { NotFound } from 'src/exceptions/not-found/not-found';
 import { AuthGuard } from 'src/middlewares/auth/auth.guard';
 import { UsersService } from 'src/services/users/users.service';
 import { RolesGuard } from 'src/middlewares/roles/roles.guard';
@@ -36,15 +36,15 @@ export class UsersController {
       await this.userService.checkUniqueField(createUserDto);
 
     if (usernameTaken) {
-      throw new BadRequest('Username is existed');
+      throw new BadRequestException('Username is existed');
     }
 
     if (emailTaken) {
-      throw new BadRequest('Email is existed');
+      throw new BadRequestException('Email is existed');
     }
 
     if (phoneTaken) {
-      throw new BadRequest('Phone is existed');
+      throw new BadRequestException('Phone is existed');
     }
 
     const user = await this.userService.create(createUserDto);
@@ -79,7 +79,7 @@ export class UsersController {
     const { id } = param;
 
     const user = await this.userService.getById(id);
-    if (!user) throw new NotFound('User is not found');
+    if (!user) throw new NotFoundException('User is not found');
 
     return {
       data: user,
@@ -96,7 +96,7 @@ export class UsersController {
     const { id } = param;
 
     const existedUser = await this.userService.getById(id);
-    if (!existedUser) throw new NotFound('User is not found');
+    if (!existedUser) throw new NotFoundException('User is not found');
 
     const updatedUser = await this.userService.update(id, updateUserDto);
     return {
@@ -112,7 +112,7 @@ export class UsersController {
     const { id } = param;
 
     const existedUser = await this.userService.getById(id);
-    if (!existedUser) throw new NotFound('User is not found');
+    if (!existedUser) throw new NotFoundException('User is not found');
 
     await this.userService.delete(id);
   }
