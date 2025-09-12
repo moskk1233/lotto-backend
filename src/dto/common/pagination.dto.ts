@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
 
-export class SearchUserQueryDto {
+export class PaginationDto {
   @ApiPropertyOptional()
   @Type(() => Number)
   @IsNumber()

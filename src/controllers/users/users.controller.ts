@@ -17,7 +17,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { IdParamDto } from 'src/dto/common/id-param.dto';
 import { CreateUserDto } from 'src/dto/users/create-user.dto';
-import { SearchUserQueryDto } from 'src/dto/users/search-user-query.dto';
 import {
   UpdateUserByAdminDto,
   UpdateUserDto,
@@ -28,6 +27,7 @@ import { UsersService } from 'src/services/users/users.service';
 import { RolesGuard } from 'src/middlewares/roles/roles.guard';
 import { User } from 'src/common/decorators/user-claim/user-claim.decorator';
 import type { UserClaim } from 'src/common/types/user-claim';
+import { PaginationDto } from 'src/dto/common/pagination.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -61,7 +61,7 @@ export class UsersController {
   @Get()
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
-  async findAll(@Query() query: SearchUserQueryDto) {
+  async findAll(@Query() query: PaginationDto) {
     const { page, limit } = query;
 
     const userCount = await this.userService.count();
