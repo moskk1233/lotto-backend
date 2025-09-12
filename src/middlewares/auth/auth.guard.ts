@@ -8,12 +8,14 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { UserClaim } from 'src/common/types/user-claim';
+import { RedisService } from 'src/services/redis/redis.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private configService: ConfigService,
     private jwtService: JwtService,
+    private redisService: RedisService,
   ) {}
 
   async canActivate(context: ExecutionContext) {
@@ -25,6 +27,12 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync<UserClaim>(token, {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
+
+      const isRevoked = await this.redisService.exists(
+        `revoked_token:${token}`,
+      );
+      if (isRevoked)
+        throw new UnauthorizedException('This token has been revoked');
 
       request['user'] = payload;
     } catch {

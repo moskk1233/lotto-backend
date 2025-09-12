@@ -1,16 +1,22 @@
 import {
   Body,
   Controller,
+  Delete,
+  Headers,
   HttpCode,
   HttpStatus,
   Post,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { UsersService } from 'src/services/users/users.service';
 import argon2 from 'argon2';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from 'src/middlewares/auth/auth.guard';
+import { RedisService } from 'src/services/redis/redis.service';
+import { UserClaim } from 'src/common/types/user-claim';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -18,6 +24,7 @@ export class AuthController {
   constructor(
     private userService: UsersService,
     private jwtService: JwtService,
+    private redisService: RedisService,
   ) {}
 
   @Post('token')
@@ -41,5 +48,26 @@ export class AuthController {
     return {
       access_token: token,
     };
+  }
+
+  @Delete('token')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard)
+  async signOut(@Headers('Authorization') authorization: string) {
+    const [type, token] = authorization.split(' ') ?? [];
+    const accessToken = type === 'Bearer' ? token : undefined;
+    if (!accessToken) return;
+
+    const userClaim: UserClaim = this.jwtService.decode(accessToken);
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = userClaim.exp - now;
+
+    if (ttl > 0) {
+      await this.redisService.set(
+        `revoked_token:${accessToken}`,
+        String(userClaim.userId),
+        ttl,
+      );
+    }
   }
 }

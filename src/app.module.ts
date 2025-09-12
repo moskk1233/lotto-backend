@@ -7,6 +7,7 @@ import { UsersService } from './services/users/users.service';
 import { AuthController } from './controllers/auth/auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { RedisService } from './services/redis/redis.service';
 
 @Module({
   imports: [
@@ -28,6 +29,6 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [AppController, UsersController, AuthController],
-  providers: [AppService, PrismaService, UsersService],
+  providers: [AppService, PrismaService, UsersService, RedisService],
 })
 export class AppModule {}
