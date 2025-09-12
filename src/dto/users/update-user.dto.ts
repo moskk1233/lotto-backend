@@ -6,7 +6,7 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { UserRoleEnum } from 'src/enums/user-role.enum';
+import { UserRoleEnum } from 'src/common/enums/user-role.enum';
 
 export class UpdateUserDto {
   @IsOptional()
