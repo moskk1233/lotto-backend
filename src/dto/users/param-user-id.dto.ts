@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
 
-export class FindUserByIdDto {
+export class ParamUserIdDto {
   @ApiProperty()
   @Type(() => Number)
   @IsNumber()
