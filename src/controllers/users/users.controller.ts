@@ -9,15 +9,20 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { IdParamDto } from 'src/dto/common/id-param.dto';
 import { CreateUserDto } from 'src/dto/users/create-user.dto';
 import { SearchUserQueryDto } from 'src/dto/users/search-user-query.dto';
 import { UpdateUserByAdminDto } from 'src/dto/users/update-user.dto';
+import { UserRoleEnum } from 'src/common/enums/user-role.enum';
 import { BadRequest } from 'src/exceptions/bad-request/bad-request';
 import { NotFound } from 'src/exceptions/not-found/not-found';
+import { AuthGuard } from 'src/middlewares/auth/auth.guard';
 import { UsersService } from 'src/services/users/users.service';
+import { RolesGuard } from 'src/middlewares/roles/roles.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -49,6 +54,8 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRoleEnum.ADMIN)
   async findAll(@Query() query: SearchUserQueryDto) {
     const { page, limit } = query;
 
@@ -66,6 +73,8 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRoleEnum.ADMIN)
   async findById(@Param() param: IdParamDto) {
     const { id } = param;
 
@@ -78,6 +87,8 @@ export class UsersController {
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRoleEnum.ADMIN)
   async updateById(
     @Param() param: IdParamDto,
     @Body() updateUserDto: UpdateUserByAdminDto,
@@ -94,6 +105,8 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRoleEnum.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteById(@Param() param: IdParamDto) {
     const { id } = param;
