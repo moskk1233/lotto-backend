@@ -8,6 +8,8 @@ import { AuthController } from './controllers/auth/auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { RedisService } from './services/redis/redis.service';
+import { TicketsService } from './services/tickets/tickets.service';
+import { TicketsController } from './controllers/tickets/tickets.controller';
 
 @Module({
   imports: [
@@ -28,7 +30,18 @@ import { RedisService } from './services/redis/redis.service';
       }),
     }),
   ],
-  controllers: [AppController, UsersController, AuthController],
-  providers: [AppService, PrismaService, UsersService, RedisService],
+  controllers: [
+    AppController,
+    UsersController,
+    AuthController,
+    TicketsController,
+  ],
+  providers: [
+    AppService,
+    PrismaService,
+    UsersService,
+    RedisService,
+    TicketsService,
+  ],
 })
 export class AppModule {}
