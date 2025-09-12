@@ -6,7 +6,7 @@ import { AllExceptionFilter } from './middlewares/all-exception/all-exception.fi
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useGlobalFilters(new AllExceptionFilter());
 
   const config = new DocumentBuilder()
