@@ -1,15 +1,15 @@
-import { HttpException } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class BadRequest extends HttpException {
   constructor(detail: unknown) {
     super(
       {
         error: {
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           detail,
         },
       },
-      400,
+      HttpStatus.BAD_REQUEST,
     );
   }
 }

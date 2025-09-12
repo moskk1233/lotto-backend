@@ -1,15 +1,15 @@
-import { HttpException } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class NotFound extends HttpException {
   constructor(detail: unknown) {
     super(
       {
         error: {
-          status: 404,
+          status: HttpStatus.NOT_FOUND,
           detail,
         },
       },
-      404,
+      HttpStatus.NOT_FOUND,
     );
   }
 }

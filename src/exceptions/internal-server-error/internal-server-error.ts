@@ -1,15 +1,15 @@
-import { HttpException } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class InternalServerError extends HttpException {
   constructor() {
     super(
       {
         error: {
-          status: 500,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           detail: 'Something went wrong, please try again',
         },
       },
-      500,
+      HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }
