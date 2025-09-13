@@ -13,10 +13,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { PrizeStatus } from 'src/common/enums/prize-status.enum';
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
+import { ACCESS_TOKEN } from 'src/constant';
 import { IdParamDto } from 'src/dto/common/id-param.dto';
 import { CreatePrizeDto } from 'src/dto/prizes/create-prize.dto';
 import { QueryPrizesDto } from 'src/dto/prizes/query.prizes.dto';
@@ -27,6 +28,7 @@ import { PrizesService } from 'src/services/prizes/prizes.service';
 import { TicketsService } from 'src/services/tickets/tickets.service';
 
 @ApiTags('Prizes')
+@ApiBearerAuth(ACCESS_TOKEN)
 @Controller('prizes')
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(UserRoleEnum.ADMIN)

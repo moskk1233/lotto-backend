@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionFilter } from './middlewares/all-exception/all-exception.filter';
+import { ACCESS_TOKEN } from './constant';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,14 @@ async function bootstrap() {
     .setTitle('Lotto 888 Backend')
     .setDescription('Use for Lotto 888')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        bearerFormat: 'JWT',
+        scheme: 'bearer',
+      },
+      ACCESS_TOKEN,
+    )
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

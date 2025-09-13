@@ -13,10 +13,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
+import { ACCESS_TOKEN } from 'src/constant';
 import { IdParamDto } from 'src/dto/common/id-param.dto';
 import { CreateTicketDto } from 'src/dto/tickets/create-ticket.dto';
 import { QueryTicketDto } from 'src/dto/tickets/query-ticket.dto';
@@ -26,6 +27,7 @@ import { RolesGuard } from 'src/middlewares/roles/roles.guard';
 import { TicketsService } from 'src/services/tickets/tickets.service';
 
 @ApiTags('Tickets')
+@ApiBearerAuth(ACCESS_TOKEN)
 @Controller('tickets')
 @UseGuards(AuthGuard)
 export class TicketsController {
