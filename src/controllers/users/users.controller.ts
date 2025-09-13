@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -32,6 +33,7 @@ import { QueryTicketDto } from 'src/dto/tickets/query-ticket.dto';
 import { TicketsService } from 'src/services/tickets/tickets.service';
 import { Prisma } from '@prisma/client';
 import { UserBuyTicketDto } from 'src/dto/users/buy-ticket.dto';
+import { PrizesService } from 'src/services/prizes/prizes.service';
 
 @ApiTags('Users')
 @Controller('users')
@@ -39,6 +41,7 @@ export class UsersController {
   constructor(
     private userService: UsersService,
     private ticketService: TicketsService,
+    private prizeService: PrizesService,
   ) {}
 
   @Post()
@@ -146,6 +149,25 @@ export class UsersController {
         pageCount,
       },
     };
+  }
+
+  @Get('@me/tickets/:id/prize')
+  @UseGuards(AuthGuard)
+  async userGetOwnPrizes(
+    @Param() param: IdParamDto,
+    @User() userClaim: UserClaim,
+  ) {
+    const { id } = param;
+
+    const ticket = await this.ticketService.getById(id);
+    if (!ticket) throw new NotFoundException('Ticket is not found');
+    if (ticket.ownerId !== userClaim.userId)
+      throw new ForbiddenException('This ticket is not yours');
+
+    const existedPrize = await this.prizeService.getByTicketId(id);
+    if (!existedPrize)
+      throw new NotFoundException('Sorry about that, but you not the winner');
+    return existedPrize;
   }
 
   @Post('@me/tickets')

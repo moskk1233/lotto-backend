@@ -35,6 +35,14 @@ export class PrizesService {
     });
   }
 
+  async getByTicketId(id: number) {
+    return await this.prisma.prizes.findUnique({
+      where: {
+        winningTicketId: id,
+      },
+    });
+  }
+
   async create(
     prizeDto: Omit<
       CreatePrizeDto & { winningTicketId: number },
