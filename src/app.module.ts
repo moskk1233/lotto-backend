@@ -10,6 +10,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { RedisService } from './services/redis/redis.service';
 import { TicketsService } from './services/tickets/tickets.service';
 import { TicketsController } from './controllers/tickets/tickets.controller';
+import { PrizesService } from './services/prizes/prizes.service';
+import { PrizesController } from './controllers/prizes/prizes.controller';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { TicketsController } from './controllers/tickets/tickets.controller';
     UsersController,
     AuthController,
     TicketsController,
+    PrizesController,
   ],
   providers: [
     AppService,
@@ -42,6 +45,7 @@ import { TicketsController } from './controllers/tickets/tickets.controller';
     UsersService,
     RedisService,
     TicketsService,
+    PrizesService,
   ],
 })
 export class AppModule {}
