@@ -108,6 +108,32 @@ export class UsersService {
     return updatedTicket;
   }
 
+  async claimPrize(userId: number, prizeId: number) {
+    return await this.prisma.$transaction(async (tx) => {
+      const prize = await tx.prizes.update({
+        where: {
+          id: prizeId,
+        },
+        data: {
+          status: 'claimed',
+        },
+      });
+
+      await tx.users.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          money: {
+            increment: prize.prizeAmount,
+          },
+        },
+      });
+
+      return prize;
+    });
+  }
+
   async checkUniqueField({
     username,
     email,

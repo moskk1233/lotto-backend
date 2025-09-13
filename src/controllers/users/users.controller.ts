@@ -201,6 +201,26 @@ export class UsersController {
     };
   }
 
+  @Get('@me/prizes/:id/claim')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async userClaimPrize(
+    @Param() param: IdParamDto,
+    @User() userClaim: UserClaim,
+  ) {
+    const { id } = param;
+    const existedPrize = await this.prizeService.getById(id);
+    if (!existedPrize) throw new NotFoundException('Prize is not found');
+
+    const ticket = await this.ticketService.getById(
+      existedPrize.winningTicketId,
+    );
+    if (ticket!.ownerId !== userClaim.userId)
+      throw new ForbiddenException('This prize is not yours');
+
+    await this.userService.claimPrize(userClaim.userId, existedPrize.id);
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
