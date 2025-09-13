@@ -170,7 +170,7 @@ export class UsersController {
     return existedPrize;
   }
 
-  @Post('@me/tickets')
+  @Post('@me/tickets/purchase')
   @UseGuards(AuthGuard)
   async userBuyTicket(
     @Body() userBuyTicketDto: UserBuyTicketDto,
