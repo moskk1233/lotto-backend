@@ -81,7 +81,7 @@ export class PrizesController {
         const existedPrize = await this.prizeService.getById(ticketPrize.id);
         if (existedPrize) throw new BadRequestException('Prize already added');
 
-        const result = this.prizeService.create({
+        const result = await this.prizeService.create({
           prizeAmount: createPrizeDto.prizeAmount,
           prizeDescription: createPrizeDto.prizeDescription,
           winningTicketId: ticketPrize.id,
