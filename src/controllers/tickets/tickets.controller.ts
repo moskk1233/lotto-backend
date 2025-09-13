@@ -13,7 +13,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
@@ -32,6 +32,7 @@ export class TicketsController {
   constructor(private ticketService: TicketsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'สร้างหวย' })
   @UseGuards(RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
   async create(@Body() createTicketDto: CreateTicketDto) {
@@ -46,6 +47,7 @@ export class TicketsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'ดึงหวยที่มีในระบบ' })
   async findAll(@Query() query: QueryTicketDto) {
     const { page, limit, order, sort, q } = query;
 
@@ -72,6 +74,7 @@ export class TicketsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'ดึงหวยโดยใช้ ID' })
   async findById(@Param() param: IdParamDto) {
     const { id } = param;
     const existedTicket = await this.ticketService.getById(id);
@@ -83,6 +86,7 @@ export class TicketsController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'อัพเดทหวยโดยใช้ ID' })
   @UseGuards(RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
   async updateById(
@@ -100,6 +104,7 @@ export class TicketsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'ลบหวยโดยใช้ ID' })
   @UseGuards(RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -12,7 +12,7 @@ import {
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { UsersService } from 'src/services/users/users.service';
 import argon2 from 'argon2';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from 'src/middlewares/auth/auth.guard';
 import { RedisService } from 'src/services/redis/redis.service';
@@ -28,6 +28,7 @@ export class AuthController {
   ) {}
 
   @Post('token')
+  @ApiOperation({ summary: 'ขอ access token จาก username และ password' })
   @HttpCode(HttpStatus.OK)
   async signIn(@Body() loginDto: LoginDto) {
     const { username, password } = loginDto;
@@ -51,6 +52,7 @@ export class AuthController {
   }
 
   @Delete('token')
+  @ApiOperation({ summary: 'ทำลาย access token' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard)
   async signOut(@Headers('Authorization') authorization: string) {

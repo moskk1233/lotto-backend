@@ -13,7 +13,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { PrizeStatus } from 'src/common/enums/prize-status.enum';
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
@@ -37,6 +37,7 @@ export class PrizesController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'ดึงข้อมูลรางวัลทั้งหมด' })
   async findAll(@Query() query: QueryPrizesDto) {
     const { limit, page, order, sort } = query;
 
@@ -58,6 +59,7 @@ export class PrizesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'ดึงข้อมูลรางวัลจาก ID' })
   async findById(@Param() param: IdParamDto) {
     const { id } = param;
     const existedPrize = await this.prizeService.getById(id);
@@ -69,6 +71,7 @@ export class PrizesController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'สร้างรางวัล' })
   @HttpCode(HttpStatus.CREATED)
   async createPrize(@Body() createPrizeDto: CreatePrizeDto) {
     switch (createPrizeDto.type) {
@@ -143,6 +146,7 @@ export class PrizesController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'อัพเดทรางวัลด้วย ID' })
   async updateById(
     @Param() param: IdParamDto,
     @Body() updatePrizeDto: UpdatePrizeDto,
@@ -163,6 +167,7 @@ export class PrizesController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'ลบรางวัลด้วย ID' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteById(@Param() param: IdParamDto) {
     const { id } = param;
