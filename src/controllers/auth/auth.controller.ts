@@ -12,11 +12,12 @@ import {
 import { LoginDto } from 'src/dto/auth/login.dto';
 import { UsersService } from 'src/services/users/users.service';
 import argon2 from 'argon2';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from 'src/middlewares/auth/auth.guard';
 import { RedisService } from 'src/services/redis/redis.service';
 import { UserClaim } from 'src/common/types/user-claim';
+import { ACCESS_TOKEN } from 'src/constant';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -52,6 +53,7 @@ export class AuthController {
   }
 
   @Delete('token')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({ summary: 'ทำลาย access token' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard)

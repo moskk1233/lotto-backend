@@ -14,7 +14,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { IdParamDto } from 'src/dto/common/id-param.dto';
 import { CreateUserDto } from 'src/dto/users/create-user.dto';
@@ -34,6 +34,7 @@ import { TicketsService } from 'src/services/tickets/tickets.service';
 import { Prisma } from '@prisma/client';
 import { UserBuyTicketDto } from 'src/dto/users/buy-ticket.dto';
 import { PrizesService } from 'src/services/prizes/prizes.service';
+import { ACCESS_TOKEN } from 'src/constant';
 
 @ApiTags('Users')
 @Controller('users')
@@ -70,6 +71,7 @@ export class UsersController {
   }
 
   @Get()
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({ summary: 'ดึงข้อมูลผู้ใช้งานจากระบบทั้งหมด' })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
@@ -90,10 +92,9 @@ export class UsersController {
   }
 
   @Get('@me')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({
     summary: 'ดึงข้อมูลผู้ใช้งานปัจจุบัน',
-    description:
-      'ดึงข้อมูลผู้ใช้งานปัจจุบันโดยใช้ JWT แนบมากับ Authorization Header',
   })
   @UseGuards(AuthGuard)
   async findMe(@User() userClaim: UserClaim) {
@@ -107,10 +108,9 @@ export class UsersController {
   }
 
   @Put('@me')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({
     summary: 'อัพเดทข้อมูลผู้ใช้งานปัจจุบัน',
-    description:
-      'อัพเดทข้อมูลผู้ใช้งานปัจจุบันโดยใช้ JWT แนบมากับ Authorization Header',
   })
   @UseGuards(AuthGuard)
   async updateMe(
@@ -128,10 +128,9 @@ export class UsersController {
   }
 
   @Get('@me/tickets')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({
     summary: 'ดึงข้อมูลหวยของผู้ใช้งานปัจจุบัน',
-    description:
-      'ดึงข้อมูลหวยของผู้ใช้งานปัจจุบันโดยใช้ JWT แนบมากับ Authorization Header',
   })
   @UseGuards(AuthGuard)
   async getCurrentUserTicket(
@@ -169,10 +168,9 @@ export class UsersController {
   }
 
   @Get('@me/tickets/:id/prize')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({
     summary: 'เช็คหวยว่าผู้ใช้งานถูกรางวัลไหม',
-    description:
-      'จะเช็คหวยของผู้ใช้งานปัจจุบันโดยใช้ ID ของ ticket เพื่อนำไปเช็ค',
   })
   @UseGuards(AuthGuard)
   async userGetOwnPrizes(
@@ -193,6 +191,7 @@ export class UsersController {
   }
 
   @Post('@me/tickets/purchase')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({ summary: 'ผู้ใช้งานสั่งซื้อหวย' })
   @UseGuards(AuthGuard)
   async userBuyTicket(
@@ -225,9 +224,9 @@ export class UsersController {
   }
 
   @Get('@me/prizes/:id/claim')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({
     summary: 'ผู้ใช้งานขึ้นรางวัล',
-    description: 'ผู้ใช้งานจะขึ้นรางวัลหวยโดยใช้ ID ของ Prize',
   })
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -249,6 +248,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({ summary: 'ดึงข้อมูลผู้ใช้งานจาก ID' })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
@@ -264,6 +264,7 @@ export class UsersController {
   }
 
   @Put(':id')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({ summary: 'อัพเดทข้อมูลผู้ใช้งานจาก ID' })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
@@ -283,6 +284,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth(ACCESS_TOKEN)
   @ApiOperation({ summary: 'ลบผู้ใช้งานจาก ID' })
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoleEnum.ADMIN)
