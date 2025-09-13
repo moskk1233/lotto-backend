@@ -10,7 +10,7 @@ import {
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
 
 export class UpdateUserDto {
-  @ApiProperty({ example: 'johndoe' })
+  @ApiProperty({ example: '12345' })
   @IsOptional()
   @IsString()
   password: string;
