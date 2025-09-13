@@ -1,4 +1,18 @@
 services:
+  nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    environment:
+      DATABASE_URL: mysql://root:admin@database:3306/lottery-collection
+      JWT_SECRET: 203ca06ed628dffee055f2ad5cc4d389f1a0c7dfa0c9bef0d28d329ebfbf4991
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - database
+
   database:
     image: mysql:latest
     ports:
