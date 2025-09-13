@@ -13,6 +13,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { Roles } from 'src/common/decorators/roles/roles.decorator';
 import { UserRoleEnum } from 'src/common/enums/user-role.enum';
@@ -24,6 +25,7 @@ import { AuthGuard } from 'src/middlewares/auth/auth.guard';
 import { RolesGuard } from 'src/middlewares/roles/roles.guard';
 import { TicketsService } from 'src/services/tickets/tickets.service';
 
+@ApiTags('Tickets')
 @Controller('tickets')
 @UseGuards(AuthGuard)
 export class TicketsController {
