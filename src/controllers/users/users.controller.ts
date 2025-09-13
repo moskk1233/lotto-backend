@@ -28,11 +28,18 @@ import { RolesGuard } from 'src/middlewares/roles/roles.guard';
 import { User } from 'src/common/decorators/user-claim/user-claim.decorator';
 import type { UserClaim } from 'src/common/types/user-claim';
 import { PaginationDto } from 'src/dto/common/pagination.dto';
+import { QueryTicketDto } from 'src/dto/tickets/query-ticket.dto';
+import { TicketsService } from 'src/services/tickets/tickets.service';
+import { Prisma } from '@prisma/client';
+import { UserBuyTicketDto } from 'src/dto/users/buy-ticket.dto';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private userService: UsersService) {}
+  constructor(
+    private userService: UsersService,
+    private ticketService: TicketsService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -102,6 +109,73 @@ export class UsersController {
     const updatedUser = await this.userService.update(userId, updateUserDto);
     return {
       data: updatedUser,
+    };
+  }
+
+  @Get('@me/tickets')
+  @UseGuards(AuthGuard)
+  async getCurrentUserTicket(
+    @Query() query: QueryTicketDto,
+    @User() userClaim: UserClaim,
+  ) {
+    const { page, limit, order, sort, q } = query;
+
+    const where: Prisma.LotteryTicketsWhereInput = {};
+    const orderBy: Prisma.LotteryTicketsOrderByWithRelationInput = {};
+
+    where.ownerId = userClaim.userId;
+
+    if (q) where.ticketNumber = { contains: q };
+    if (sort) orderBy[sort] = order ?? undefined;
+
+    const ticketCount = await this.ticketService.count({ where });
+    const pageCount = Math.ceil(ticketCount / limit);
+    const tickets = await this.ticketService.getAll(page, limit, {
+      where,
+      orderBy,
+      omit: {
+        ownerId: true,
+        price: true,
+      },
+    });
+
+    return {
+      data: tickets,
+      meta: {
+        page,
+        pageCount,
+      },
+    };
+  }
+
+  @Post('@me/tickets')
+  @UseGuards(AuthGuard)
+  async userBuyTicket(
+    @Body() userBuyTicketDto: UserBuyTicketDto,
+    @User() userClaim: UserClaim,
+  ) {
+    const existedTicket = await this.ticketService.getByNumber(
+      userBuyTicketDto.ticketNumber,
+    );
+    if (!existedTicket) throw new NotFoundException('Ticket is not found');
+
+    const userProfile = (await this.userService.getById(userClaim.userId))!;
+    if (userProfile.money < existedTicket.price)
+      throw new BadRequestException(
+        "You don't have enough money to buy this ticket",
+      );
+
+    if (existedTicket.ownerId)
+      throw new BadRequestException('This ticket has been sold');
+
+    const updaatedTicket = await this.userService.buyTicket(
+      userClaim.userId,
+      existedTicket.id,
+      existedTicket.price,
+    );
+
+    return {
+      data: updaatedTicket,
     };
   }
 

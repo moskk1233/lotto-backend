@@ -82,6 +82,32 @@ export class UsersService {
     });
   }
 
+  async buyTicket(userId: number, ticketId: number, price: number) {
+    const [, updatedTicket] = await this.prisma.$transaction([
+      this.prisma.users.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          money: {
+            decrement: price,
+          },
+        },
+      }),
+
+      this.prisma.lotteryTickets.update({
+        where: {
+          id: ticketId,
+        },
+        data: {
+          ownerId: userId,
+        },
+      }),
+    ]);
+
+    return updatedTicket;
+  }
+
   async checkUniqueField({
     username,
     email,
