@@ -1,33 +1,17 @@
-FROM node:24-alpine AS builder
+FROM node:24-alpine
 
 WORKDIR /app
 
+RUN corepack enable && corepack prepare --activate pnpm@latest
+
 COPY package.json .
 
-RUN npm install
+RUN pnpm install
 
 COPY . .
 
-RUN npx prisma generate
+RUN pnpm prisma generate
 
-RUN npm run build
+RUN pnpm run build
 
-FROM node:24-alpine AS runner
-
-ENV NODE_ENV=production
-
-WORKDIR /app
-
-COPY --from=builder /app/dist ./dist
-
-COPY package.json .
-
-COPY ./prisma ./prisma
-
-RUN npm install
-
-COPY entrypoint.sh .
-
-EXPOSE 3000
-
-CMD [ "/app/entrypoint.sh" ]
+CMD [ "sh", "-c", "pnpm db:deploy && pnpm start:prod" ]
