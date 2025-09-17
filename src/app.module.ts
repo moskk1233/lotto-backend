@@ -12,6 +12,7 @@ import { TicketsService } from './services/tickets/tickets.service';
 import { TicketsController } from './controllers/tickets/tickets.controller';
 import { PrizesService } from './services/prizes/prizes.service';
 import { PrizesController } from './controllers/prizes/prizes.controller';
+import { SystemController } from './controllers/system/system.controller';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PrizesController } from './controllers/prizes/prizes.controller';
     AuthController,
     TicketsController,
     PrizesController,
+    SystemController,
   ],
   providers: [
     AppService,
