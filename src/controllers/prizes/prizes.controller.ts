@@ -49,6 +49,14 @@ export class PrizesController {
     const orderBy = sort ? { [sort]: order } : undefined;
     const prizes = await this.prizeService.getAll(page, limit, {
       orderBy,
+      include: {
+        winningTicket: {
+          select: {
+            id: true,
+            ticketNumber: true,
+          },
+        },
+      },
     });
 
     return {
