@@ -31,14 +31,14 @@ import { TicketsService } from 'src/services/tickets/tickets.service';
 @ApiBearerAuth(ACCESS_TOKEN)
 @Controller('prizes')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles(UserRoleEnum.ADMIN)
 export class PrizesController {
   constructor(
     private prizeService: PrizesService,
     private ticketService: TicketsService,
-  ) {}
+  ) { }
 
   @Get()
+  @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
   @ApiOperation({ summary: 'ดึงข้อมูลรางวัลทั้งหมด' })
   async findAll(@Query() query: QueryPrizesDto) {
     const { limit, page, order, sort } = query;
@@ -69,6 +69,7 @@ export class PrizesController {
   }
 
   @Get(':id')
+  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'ดึงข้อมูลรางวัลจาก ID' })
   async findById(@Param() param: IdParamDto) {
     const { id } = param;
@@ -81,6 +82,7 @@ export class PrizesController {
   }
 
   @Post()
+  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'สร้างรางวัล' })
   @HttpCode(HttpStatus.CREATED)
   async createPrize(@Body() createPrizeDto: CreatePrizeDto) {
@@ -156,6 +158,7 @@ export class PrizesController {
   }
 
   @Put(':id')
+  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'อัพเดทรางวัลด้วย ID' })
   async updateById(
     @Param() param: IdParamDto,
@@ -177,6 +180,7 @@ export class PrizesController {
   }
 
   @Delete(':id')
+  @Roles(UserRoleEnum.ADMIN)
   @ApiOperation({ summary: 'ลบรางวัลด้วย ID' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteById(@Param() param: IdParamDto) {
