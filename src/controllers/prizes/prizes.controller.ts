@@ -35,7 +35,7 @@ export class PrizesController {
   constructor(
     private prizeService: PrizesService,
     private ticketService: TicketsService,
-  ) { }
+  ) {}
 
   @Get()
   @Roles(UserRoleEnum.ADMIN, UserRoleEnum.USER)
