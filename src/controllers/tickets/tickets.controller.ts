@@ -64,6 +64,13 @@ export class TicketsController {
     const tickets = await this.ticketService.getAll(page, limit, {
       orderBy,
       where,
+      include: {
+        owner: {
+          select: {
+            username: true,
+          },
+        },
+      },
     });
 
     return {

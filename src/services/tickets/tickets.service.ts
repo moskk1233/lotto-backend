@@ -32,6 +32,13 @@ export class TicketsService {
       where: {
         id,
       },
+      include: {
+        owner: {
+          select: {
+            username: true,
+          },
+        },
+      },
     });
   }
 
